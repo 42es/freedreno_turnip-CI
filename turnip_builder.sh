@@ -12,12 +12,19 @@ mesasrc="https://gitlab.freedesktop.org/mesa/mesa.git"
 
 #array of string => commit/branch;patch args
 base_patches=(
+    "vk;merge_requests/38323;"
+    "tu_direct;merge_requests/38960;"
+	"vk_barrier;merge_requests/38956;"
+	"tu_fixds;merge_requests/39236;"
+	"tu_lrz;merge_requests/39535;"
 	"a7xx_gen1_random_stuff;../../patches/a7xx_gen1_random_stuff.patch;"
 	"8g2_ui_glitch;../../patches/8g2_ui_glitch.patch;"
 )
 experimental_patches=(
+	"fix_a725_a730;../../patches/fix_a725_a730.patch;"
+	"quest3;../../patches/quest3.patch;"
 	"force_sysmem_no_autotuner;../../patches/force_sysmem_no_autotuner.patch;"
-	# "disable_VK_KHR_workgroup_memory_explicit_layout;../../patches/disable_KHR_workgroup_memory_explicit_layout.patch;"
+	"disable_VK_KHR_workgroup_memory_explicit_layout;../../patches/disable_KHR_workgroup_memory_explicit_layout.patch;"
 )
 failed_patches=()
 commit=""
