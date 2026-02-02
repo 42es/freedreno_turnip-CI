@@ -16,13 +16,12 @@ base_patches=(
     "tu_direct;merge_requests/38960;"
 	"vk_barrier;merge_requests/38956;"
 	"tu_fixds;merge_requests/39236;"
-	"tu_lrz;merge_requests/39535;"
 	"a7xx_gen1_random_stuff;../../patches/a7xx_gen1_random_stuff.patch;"
 	"8g2_ui_glitch;../../patches/8g2_ui_glitch.patch;"
 )
 experimental_patches=(
-	"fix_a725_a730;../../patches/fix_a725_a730.patch;"
-	"quest3;../../patches/quest3.patch;"
+	"copy_raw;merge_requests/35610;"
+	"tu_autotune;merge_requests/37802;"
 	"force_sysmem_no_autotuner;../../patches/force_sysmem_no_autotuner.patch;"
 	"disable_VK_KHR_workgroup_memory_explicit_layout;../../patches/disable_KHR_workgroup_memory_explicit_layout.patch;"
 )
