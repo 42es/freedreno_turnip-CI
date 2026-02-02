@@ -14,8 +14,6 @@ mesasrc="https://gitlab.freedesktop.org/mesa/mesa.git"
 base_patches=(
 	"a7xx_gen1_random_stuff;../../patches/a7xx_gen1_random_stuff.patch;"
 	"8g2_ui_glitch;../../patches/8g2_ui_glitch.patch;"
-	"fix_a725_a730;../../patches/fix_a725_a730.patch;"
-	"quest3;../../patches/quest3.patch;"	
 )
 experimental_patches=(
 	"force_sysmem_no_autotuner;../../patches/force_sysmem_no_autotuner.patch;"
