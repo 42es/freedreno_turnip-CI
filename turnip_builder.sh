@@ -229,7 +229,7 @@ port_lib_for_adrenotool(){
 }
 EOF
 
-	filename=turnip_"$mesa_version/vk$vulkan_version"_"$(date +'%b-%d-%Y')"_"$commit_short"
+	filename=turnip_"$mesa_version"_"vk$vulkan_version"_"$(date +'%b-%d-%Y')"_"$commit_short"
 	echo "Copy necessary files from work directory ..." $'\n'
 	cp "$workdir"/vulkan.ad07XX.so "$packagedir"
 
