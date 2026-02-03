@@ -12,10 +12,10 @@ mesasrc="https://gitlab.freedesktop.org/mesa/mesa.git"
 
 #array of string => commit/branch;patch args
 base_patches=(
-    "vk;merge_requests/38323;"
-    "tu_direct;merge_requests/38960;"
-	"vk_barrier;merge_requests/38956;"
-	"tu_fixds;merge_requests/39236;"
+    #"vk;merge_requests/38323;"
+    #"tu_direct;merge_requests/38960;"
+	#"vk_barrier;merge_requests/38956;"
+	#"tu_fixds;merge_requests/39236;"
 	"a7xx_gen1_random_stuff;../../patches/a7xx_gen1_random_stuff.patch;"
 	"8g2_ui_glitch;../../patches/8g2_ui_glitch.patch;"
 )
@@ -229,7 +229,7 @@ port_lib_for_adrenotool(){
 }
 EOF
 
-	filename=turnip_"$mesa_version"_"vk$vulkan_version"_"$(date +'%b-%d-%Y')"_"$commit_short"
+	filename=Turnip_"$mesa_version"_"vk$vulkan_version"_"$(date +'%b-%d-%Y')"_"$commit_short"
 	echo "Copy necessary files from work directory ..." $'\n'
 	cp "$workdir"/vulkan.ad07XX.so "$packagedir"
 
