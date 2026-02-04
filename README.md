@@ -9,3 +9,4 @@ This is a bash script to build freedreno/turnip for android as an adrenotool pac
 - https://forum.xda-developers.com/t/getting-freedreno-turnip-mesa-vulkan-driver-on-a-poco-f3.4323871/
 - https://github.com/ilhan-athn7/freedreno_turnip-CI
 - https://gitlab.freedesktop.org/mesa/mesa/-/issues/6802
+- https://github.com/whitebelyash/mesa-tu8
