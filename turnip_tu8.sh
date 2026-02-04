@@ -99,7 +99,7 @@ prepare_workdir(){
 		echo "Cloning mesa-tu8 ..." $'\n'
 		git clone --depth=1 "$mesasrc"
 
-		cd mesa
+		cd mesa-tu8
 		commit_short=$(git rev-parse --short HEAD)
 		commit=$(git rev-parse HEAD)
 		mesa_version=$(cat VERSION | xargs)
@@ -136,7 +136,7 @@ apply_patches() {
 			fi
 		else 
 			patch_file="${patch_source#*\/}"
-			curl --output "../$patch_file".patch -k --retry-delay 30 --retry 5 -f --retry-all-errors https://github.com/whitebelyash/mesa-tu8/-/"$patch_source".patch
+			curl --output "../$patch_file".patch -k --retry-delay 30 --retry 5 -f --retry-all-errors https://github.com/whitebelyash/mesa-tu8/src/mesa/-/"$patch_source".patch
 			sleep 1
 
 			if git apply $patch_args "../$patch_file".patch ; then
@@ -159,7 +159,7 @@ patch_to_description() {
 		if [[ $patch_source == *"../.."* ]]; then
 			echo "- $patch_name, $patch_source, $patch_args" >> description
 		else 
-			echo "- $patch_name, [$patch_source](https://github.com/whitebelyash/mesa-tu8/-/$patch_source), $patch_args" >> description
+			echo "- $patch_name, [$patch_source](https://github.com/whitebelyash/mesa-tu8/src/mesa/-/$patch_source), $patch_args" >> description
 		fi
 	done
 }
