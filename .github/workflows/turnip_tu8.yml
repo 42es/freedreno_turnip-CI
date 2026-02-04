@@ -3,7 +3,7 @@ name: Build "turnip_tu8"
 on:
   workflow_dispatch:
   schedule:
-  - cron: "20 5 1,15 * *"
+  - cron: "30 1 14,28 * *"
 
 jobs:
   start_building_turnip:
