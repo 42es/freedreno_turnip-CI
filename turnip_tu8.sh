@@ -91,12 +91,12 @@ prepare_workdir(){
 	fi
 
 	if [ -z "$1" ]; then
-		if [ -d mesa ]; then
-			echo "Removing old mesa ..." $'\n'
-			rm -rf mesa
+		if [ -d mesa-tu8 ]; then
+			echo "Removing old mesa-tu8 ..." $'\n'
+			rm -rf mesa-tu8
 		fi
 		
-		echo "Cloning mesa ..." $'\n'
+		echo "Cloning mesa-tu8 ..." $'\n'
 		git clone --depth=1 "$mesasrc"
 
 		cd mesa
@@ -136,7 +136,7 @@ apply_patches() {
 			fi
 		else 
 			patch_file="${patch_source#*\/}"
-			curl --output "../$patch_file".patch -k --retry-delay 30 --retry 5 -f --retry-all-errors https://gitlab.freedesktop.org/mesa/mesa/-/"$patch_source".patch
+			curl --output "../$patch_file".patch -k --retry-delay 30 --retry 5 -f --retry-all-errors https://github.com/whitebelyash/mesa-tu8/-/"$patch_source".patch
 			sleep 1
 
 			if git apply $patch_args "../$patch_file".patch ; then
@@ -159,7 +159,7 @@ patch_to_description() {
 		if [[ $patch_source == *"../.."* ]]; then
 			echo "- $patch_name, $patch_source, $patch_args" >> description
 		else 
-			echo "- $patch_name, [$patch_source](https://gitlab.freedesktop.org/mesa/mesa/-/$patch_source), $patch_args" >> description
+			echo "- $patch_name, [$patch_source](https://github.com/whitebelyash/mesa-tu8/-/$patch_source), $patch_args" >> description
 		fi
 	done
 }
@@ -189,7 +189,7 @@ endian = 'little'
 EOF
 
 	echo "Generating build files ..." $'\n'
-	meson setup build-android-aarch64 --cross-file "$workdir"/mesa/android-aarch64 -Dbuildtype=release -Dplatforms=android -Dplatform-sdk-version=$sdkver -Dandroid-stub=true -Dgallium-drivers= -Dvulkan-drivers=freedreno -Dvulkan-beta=true -Dfreedreno-kmds=kgsl -Db_lto=true -Degl=disabled &> "$workdir"/meson_log
+	meson setup build-android-aarch64 --cross-file "$workdir"/mesa-tu8/android-aarch64 -Dbuildtype=release -Dplatforms=android -Dplatform-sdk-version=$sdkver -Dandroid-stub=true -Dgallium-drivers= -Dvulkan-drivers=freedreno -Dvulkan-beta=true -Dfreedreno-kmds=kgsl -Db_lto=true -Degl=disabled &> "$workdir"/meson_log
 
 	echo "Compiling build files ..." $'\n'
 	ninja -C build-android-aarch64 &> "$workdir"/ninja_log
@@ -197,7 +197,7 @@ EOF
 
 port_lib_for_adrenotool(){
 	echo "Using patchelf to match soname ..."  $'\n'
-	cp "$workdir"/mesa/build-android-aarch64/src/freedreno/vulkan/libvulkan_freedreno.so "$workdir"
+	cp "$workdir"/mesa-tu8/build-android-aarch64/src/freedreno/vulkan/libvulkan_freedreno.so "$workdir"
 	cd "$workdir"
 	patchelf --set-soname vulkan.adreno.so libvulkan_freedreno.so
 	mv libvulkan_freedreno.so vulkan.ad08XX.so
@@ -242,7 +242,7 @@ EOF
 		echo "Turnip - $mesa_version - $date" > release
 		echo "$mesa_version"_"$commit_short" > tag
 		echo  $filename > filename
-		echo "### Base commit : [$commit_short](https://gitlab.freedesktop.org/mesa/mesa/-/commit/$commit_short)" > description
+		echo "### Base commit : [$commit_short](https://github.com/whitebelyash/mesa-tu8.git)" > description
 		echo "false" > patched
 		echo "false" > experimental
 	else		
