@@ -91,15 +91,15 @@ prepare_workdir(){
 	fi
 
 	if [ -z "$1" ]; then
-		if [ -d mesa-tu8 ]; then
+		if [ -d mesa-for-android-container ]; then
 			echo "Removing old mesa-tu8 ..." $'\n'
-			rm -rf mesa-tu8
+			rm -rf mesa-for-android-container
 		fi
 		
-		echo "Cloning mesa-tu8 ..." $'\n'
+		echo "Cloning mesa-for-android-container ..." $'\n'
 		git clone --depth=1 "$mesasrc"
 
-		cd mesa-tu8
+		cd mesa-for-android-container
 		commit_short=$(git rev-parse --short HEAD)
 		commit=$(git rev-parse HEAD)
 		mesa_version=$(cat VERSION | xargs)
@@ -218,7 +218,7 @@ port_lib_for_adrenotool(){
 	cat <<EOF >"meta.json"
 {
   "schemaVersion": 1,
-  "name": "Turnip - $mesa_version - $date - $commit_short$suffix - Gen8",
+  "name": "Turnip - $mesa_version - $date - $commit_short$suffix - Android",
   "description": "Compiled from Mesa(https://github.com/lfdevs/mesa-for-android-container) fork, Commit $commit_short$suffix",
   "author": "mesa",
   "packageVersion": "1",
@@ -229,7 +229,7 @@ port_lib_for_adrenotool(){
 }
 EOF
 
-	filename=Turnip_"$mesa_version"_"vk$vulkan_version"_"$(date +'%b-%d-%Y')"_"$commit_short"_Gen8
+	filename=Turnip_"$mesa_version"_"vk$vulkan_version"_"$(date +'%b-%d-%Y')"_"$commit_short"_Android
 	echo "Copy necessary files from work directory ..." $'\n'
 	cp "$workdir"/vulkan.ad08XX.so "$packagedir"
 
@@ -242,7 +242,7 @@ EOF
 		echo "Turnip - $mesa_version - $date" > release
 		echo "$mesa_version"_"$commit_short" > tag
 		echo  $filename > filename
-		echo "### Base commit : [$commit_short](https://github.com/whitebelyash/mesa-tu8.git)" > description
+		echo "### Base commit : [$commit_short](https://github.com/lfdevs/mesa-for-android-container)" > description
 		echo "false" > patched
 		echo "false" > experimental
 	else		
