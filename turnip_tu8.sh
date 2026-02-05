@@ -242,7 +242,7 @@ EOF
 		echo "Turnip - $mesa_version - $date" > release
 		echo "$mesa_version"_"$commit_short" > tag
 		echo  $filename > filename
-		echo "### Base commit : [$commit_short](https://github.com/whitebelyash/mesa-tu8.git)" > description
+		echo "### Base commit : [$commit_short](https://github.com/whitebelyash/mesa-tu8)" > description
 		echo "false" > patched
 		echo "false" > experimental
 	else		
