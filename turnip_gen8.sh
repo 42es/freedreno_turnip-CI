@@ -106,3 +106,175 @@ prepare_workdir(){
 		version=$(awk -F'COMPLETE VK_MAKE_API_VERSION(|)' '{print $2}' <<< $(cat include/vulkan/vulkan_core.h) | xargs)
 		major=$(echo $version | cut -d "," -f 2 | xargs)
 		minor=$(echo $version | cut -d "," -f 3 | xargs)
+		patch=$(awk -F'VK_HEADER_VERSION |\n#define' '{print $2}' <<< $(cat include/vulkan/vulkan_core.h) | xargs)
+		vulkan_version="$major.$minor.$patch"
+	else		
+		cd mesa
+
+		if [ $1 == "patched" ]; then 
+			apply_patches ${base_patches[@]}
+		else 
+			apply_patches ${experimental_patches[@]}
+		fi
+		
+	fi
+}
+
+apply_patches() {
+	local arr=("$@")
+	for patch in "${arr[@]}"; do
+		echo "Applying patch $patch"
+		patch_source="$(echo $patch | cut -d ";" -f 2 | xargs)"
+		patch_args=$(echo $patch | cut -d ";" -f 3 | xargs)
+		if [[ $patch_source == *"../.."* ]]; then
+			if git apply $patch_args "$patch_source"; then
+				echo "Patch applied successfully"
+			else
+				echo "Failed to apply $patch"
+				failed_patches+=("$patch")
+
+			fi
+		else 
+			patch_file="${patch_source#*\/}"
+			curl --output "../$patch_file".patch -k --retry-delay 30 --retry 5 -f --retry-all-errors https://github.com/lfdevs/mesa-for-android-container/src/mesa/-/"$patch_source".patch
+			sleep 1
+
+			if git apply $patch_args "../$patch_file".patch ; then
+				echo "Patch applied successfully"
+			else
+				echo "Failed to apply $patch"
+				failed_patches+=("$patch")
+				
+			fi
+		fi
+	done
+}
+
+patch_to_description() {
+	local arr=("$@")
+	for patch in "${arr[@]}"; do
+		patch_name="$(echo $patch | cut -d ";" -f 1 | xargs)"
+		patch_source="$(echo $patch | cut -d ";" -f 2 | xargs)"
+		patch_args="$(echo $patch | cut -d ";" -f 3 | xargs)"
+		if [[ $patch_source == *"../.."* ]]; then
+			echo "- $patch_name, $patch_source, $patch_args" >> description
+		else 
+			echo "- $patch_name, [$patch_source](https://github.com/lfdevs/mesa-for-android-container/src/mesa/-/$patch_source), $patch_args" >> description
+		fi
+	done
+}
+
+build_lib_for_android(){
+	echo "Creating meson cross file ..." $'\n'
+	if [ -z "${ANDROID_NDK_LATEST_HOME}" ]; then
+		ndk="$workdir/$ndkver/toolchains/llvm/prebuilt/linux-x86_64/bin"
+	else	
+		ndk="$ANDROID_NDK_LATEST_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin"
+	fi
+
+	cat <<EOF >"android-aarch64"
+[binaries]
+ar = '$ndk/llvm-ar'
+c = ['ccache', '$ndk/aarch64-linux-android$sdkver-clang']
+cpp = ['ccache', '$ndk/aarch64-linux-android$sdkver-clang++', '-fno-exceptions', '-fno-unwind-tables', '-fno-asynchronous-unwind-tables', '--start-no-unused-arguments', '-static-libstdc++', '--end-no-unused-arguments']
+c_ld = 'lld'
+cpp_ld = 'lld'
+strip = '$ndk/aarch64-linux-android-strip'
+pkgconfig = ['env', 'PKG_CONFIG_LIBDIR=NDKDIR/pkgconfig', '/usr/bin/pkg-config']
+[host_machine]
+system = 'android'
+cpu_family = 'aarch64'
+cpu = 'armv8'
+endian = 'little'
+EOF
+
+	echo "Generating build files ..." $'\n'
+	meson setup build-android-aarch64 --cross-file "$workdir"/mesa-for-android-container/android-aarch64 -Dbuildtype=release -Dplatforms=android -Dplatform-sdk-version=$sdkver -Dandroid-stub=true -Dgallium-drivers= -Dvulkan-drivers=freedreno -Dvulkan-beta=true -Dfreedreno-kmds=kgsl -Db_lto=true -Degl=disabled &> "$workdir"/meson_log
+
+	echo "Compiling build files ..." $'\n'
+	ninja -C build-android-aarch64 &> "$workdir"/ninja_log
+}
+
+port_lib_for_adrenotool(){
+	echo "Using patchelf to match soname ..."  $'\n'
+	cp "$workdir"/mesa-for-android-container/build-android-aarch64/src/freedreno/vulkan/libvulkan_freedreno.so "$workdir"
+	cd "$workdir"
+	patchelf --set-soname vulkan.adreno.so libvulkan_freedreno.so
+	mv libvulkan_freedreno.so vulkan.ad08XX.so
+
+	if ! [ -a vulkan.ad08XX.so ]; then
+		echo -e "$red Build failed! $nocolor" && exit 1
+	fi
+
+	mkdir -p "$packagedir" && cd "$_"
+
+	date=$(date +'%b %d, %Y')
+	suffix=""
+
+	if [ ! -z "$1" ]; then
+		suffix="_$1"
+	fi
+
+	cat <<EOF >"meta.json"
+{
+  "schemaVersion": 1,
+  "name": "Turnip - $mesa_version - $date - $commit_short$suffix - Gen8",
+  "description": "Compiled from Mesa(https://github.com/lfdevs/mesa-for-android-container) fork, Commit $commit_short$suffix",
+  "author": "mesa",
+  "packageVersion": "1",
+  "vendor": "Mesa",
+  "driverVersion": "$mesa_version/vk$vulkan_version",
+  "minApi": 27,
+  "libraryName": "vulkan.ad08XX.so"
+}
+EOF
+
+	filename=Turnip_"$mesa_version"_"vk$vulkan_version"_"$(date +'%b-%d-%Y')"_"$commit_short"_Gen8
+	echo "Copy necessary files from work directory ..." $'\n'
+	cp "$workdir"/vulkan.ad08XX.so "$packagedir"
+
+	echo "Packing files in to adrenotool package ..." $'\n'
+	zip -9 "$workdir"/"$filename$suffix".zip ./*
+
+	cd "$workdir"
+
+	if [ -z "$1" ]; then
+		echo "Turnip - $mesa_version - $date" > release
+		echo "$mesa_version"_"$commit_short" > tag
+		echo  $filename > filename
+		echo "### Base commit : [$commit_short](https://github.com/whitebelyash/mesa-tu8.git)" > description
+		echo "false" > patched
+		echo "false" > experimental
+	else		
+		if [ $1 == "patched" ]; then 
+			echo "## Upstreams / Patches" >> description
+			echo "These have not been merged by Mesa officially yet and may introduce bugs or" >> description
+			echo "we revert stuff that breaks games but still got merged in (see --reverse)" >> description
+			patch_to_description ${base_patches[@]}
+			echo "true" > patched
+			echo "" >> description
+			echo "_Upstreams / Patches are only applied to the patched version (\_patched.zip)_" >> description
+			echo "_If a patch is not present anymore, it's most likely because it got merged, is not needed anymore or was breaking something._" >> description
+		else 
+			echo "### Upstreams / Patches (Experimental)" >> description
+			echo "Include previously listed patches + experimental ones" >> description
+			patch_to_description ${experimental_patches[@]}
+			echo "true" > experimental
+			echo "" >> description
+			echo "_Experimental patches are only applied to the experimental version (\_experimental.zip)_" >> description
+		fi
+	fi
+
+	if (( ${#failed_patches[@]} )); then
+		echo "" >> description
+		echo "#### Patches that failed to apply" >> description
+		patch_to_description ${failed_patches[@]}
+	fi
+	
+	if ! [ -a "$workdir"/"$filename".zip ];
+		then echo -e "$red-Packing failed!$nocolor" && exit 1
+		else echo -e "$green-All done, you can take your zip from this folder;$nocolor" && echo "$workdir"/
+	fi
+}
+
+run_all
