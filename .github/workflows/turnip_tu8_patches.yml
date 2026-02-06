@@ -1,9 +1,9 @@
-name: Build "turnip_tu8_patches"
+name: Build "turnip_tu8_patches
 
 on:
   workflow_dispatch:
   schedule:
-  - cron: "30 1 10,25 * *"
+  - cron: "30 2 1,15 * *"
 
 jobs:
   start_building_turnip:
@@ -46,23 +46,22 @@ jobs:
         files: |
            turnip_workdir/${{ steps.versions.outputs.filename }}.zip
 
-    #- name: Release "turnip" with experimental
-    #  if: ${{ contains(steps.versions.outputs.experimental, 'true') }}
-    #  uses: softprops/action-gh-release@v1
-    #  with:
-    #   body_path: turnip_workdir/description
-    #    name: ${{ steps.versions.outputs.name }}
-    #   tag_name: ${{ steps.versions.outputs.tag }}
-    #   files: |
-    #       turnip_workdir/${{ steps.versions.outputs.filename }}_experimental.zip
+    - name: Release "turnip" with experimental
+      if: ${{ contains(steps.versions.outputs.experimental, 'true') }}
+      uses: softprops/action-gh-release@v1
+      with:
+        body_path: turnip_workdir/description
+        name: ${{ steps.versions.outputs.name }}
+        tag_name: ${{ steps.versions.outputs.tag }}
+        files: |
+           turnip_workdir/${{ steps.versions.outputs.filename }}_experimental.zip
       
     - name: Release "turnip" with patched
       if: ${{ contains(steps.versions.outputs.patched, 'true') }}
       uses: softprops/action-gh-release@v1
       with:
-       body_path: turnip_workdir/description
+        body_path: turnip_workdir/description
         name: ${{ steps.versions.outputs.name }}
-      tag_name: ${{ steps.versions.outputs.tag }}
-      files: |
-        turnip_workdir/${{ steps.versions.outputs.filename }}_patched.zip
-      
+        tag_name: ${{ steps.versions.outputs.tag }}
+        files: |
+           turnip_workdir/${{ steps.versions.outputs.filename }}_patched.zip
