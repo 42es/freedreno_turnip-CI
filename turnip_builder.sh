@@ -12,18 +12,18 @@ mesasrc="https://gitlab.freedesktop.org/mesa/mesa.git"
 
 #array of string => commit/branch;patch args
 base_patches=(
-    #"vk;merge_requests/38323;"
-    #"tu_direct;merge_requests/38960;"
+  #"vk;merge_requests/38323;"
+  #"tu_direct;merge_requests/38960;"
 	#"vk_barrier;merge_requests/38956;"
 	#"tu_fixds;merge_requests/39236;"
-	"a7xx_gen1_random_stuff;../../patches/a7xx_gen1_random_stuff.patch;"
-	"8g2_ui_glitch;../../patches/8g2_ui_glitch.patch;"
+	#"a7xx_gen1_random_stuff;../../patches/a7xx_gen1_random_stuff.patch;"
+	#"8g2_ui_glitch;../../patches/8g2_ui_glitch.patch;"
 )
 experimental_patches=(
 	#"copy_raw;merge_requests/35610;"
 	#"tu_autotune;merge_requests/37802;"
-	"force_sysmem_no_autotuner;../../patches/force_sysmem_no_autotuner.patch;"
-	"disable_VK_KHR_workgroup_memory_explicit_layout;../../patches/disable_KHR_workgroup_memory_explicit_layout.patch;"
+	#"force_sysmem_no_autotuner;../../patches/force_sysmem_no_autotuner.patch;"
+	#"disable_VK_KHR_workgroup_memory_explicit_layout;../../patches/disable_KHR_workgroup_memory_explicit_layout.patch;"
 )
 failed_patches=()
 commit=""
@@ -93,13 +93,13 @@ prepare_workdir(){
 	if [ -z "$1" ]; then
 		if [ -d mesa ]; then
 			echo "Removing old mesa ..." $'\n'
-			rm -rf mesa
+			rm -rf mesa-tu8
 		fi
 		
 		echo "Cloning mesa ..." $'\n'
 		git clone --depth=1 "$mesasrc"
 
-		cd mesa
+		cd mesa-tu8
 		commit_short=$(git rev-parse --short HEAD)
 		commit=$(git rev-parse HEAD)
 		mesa_version=$(cat VERSION | xargs)
@@ -136,7 +136,7 @@ apply_patches() {
 			fi
 		else 
 			patch_file="${patch_source#*\/}"
-			curl --output "../$patch_file".patch -k --retry-delay 30 --retry 5 -f --retry-all-errors https://gitlab.freedesktop.org/mesa/mesa/-/"$patch_source".patch
+			curl --output "../$patch_file".patch -k --retry-delay 30 --retry 5 -f --retry-all-errors https://gitlab.freedesktop.org/mesa/mesa/src/mesa/-/"$patch_source".patch
 			sleep 1
 
 			if git apply $patch_args "../$patch_file".patch ; then
@@ -159,7 +159,7 @@ patch_to_description() {
 		if [[ $patch_source == *"../.."* ]]; then
 			echo "- $patch_name, $patch_source, $patch_args" >> description
 		else 
-			echo "- $patch_name, [$patch_source](https://gitlab.freedesktop.org/mesa/mesa/-/$patch_source), $patch_args" >> description
+			echo "- $patch_name, [$patch_source](https://gitlab.freedesktop.org/mesa/mesa/src/mesa/-/$patch_source), $patch_args" >> description
 		fi
 	done
 }
@@ -189,7 +189,7 @@ endian = 'little'
 EOF
 
 	echo "Generating build files ..." $'\n'
-	meson setup build-android-aarch64 --cross-file "$workdir"/mesa/android-aarch64 -Dbuildtype=release -Dplatforms=android -Dplatform-sdk-version=$sdkver -Dandroid-stub=true -Dgallium-drivers= -Dvulkan-drivers=freedreno -Dvulkan-beta=true -Dfreedreno-kmds=kgsl -Db_lto=true -Degl=disabled &> "$workdir"/meson_log
+	meson setup build-android-aarch64 --cross-file "$workdir"/mesa-tu8/android-aarch64 -Dbuildtype=release -Dplatforms=android -Dplatform-sdk-version=$sdkver -Dandroid-stub=true -Dgallium-drivers= -Dvulkan-drivers=freedreno -Dvulkan-beta=true -Dfreedreno-kmds=kgsl -Db_lto=true -Degl=disabled &> "$workdir"/meson_log
 
 	echo "Compiling build files ..." $'\n'
 	ninja -C build-android-aarch64 &> "$workdir"/ninja_log
@@ -219,13 +219,13 @@ port_lib_for_adrenotool(){
 {
   "schemaVersion": 1,
   "name": "Turnip - $mesa_version - $date - $commit_short$suffix",
-  "description": "Compiled from Mesa, Commit $commit_short$suffix",
+  "description": "Compiled from Mesa(https://github.com/whitebelyash/mesa-tu8) fork, Commit $commit_short$suffix",
   "author": "mesa",
   "packageVersion": "1",
   "vendor": "Mesa",
   "driverVersion": "$mesa_version/vk$vulkan_version",
   "minApi": 27,
-  "libraryName": "vulkan.ad07XX.so"
+  "libraryName": "vulkan.ad08XX.so"
 }
 EOF
 
@@ -242,7 +242,7 @@ EOF
 		echo "Turnip - $mesa_version - $date" > release
 		echo "$mesa_version"_"$commit_short" > tag
 		echo  $filename > filename
-		echo "### Base commit : [$commit_short](https://gitlab.freedesktop.org/mesa/mesa/-/commit/$commit_short)" > description
+		echo "### Base commit : [$commit_short](https://github.com/whitebelyash/mesa-tu8)" > description
 		echo "false" > patched
 		echo "false" > experimental
 	else		
