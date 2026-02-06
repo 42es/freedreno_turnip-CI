@@ -12,18 +12,11 @@ mesasrc="https://gitlab.freedesktop.org/mesa/mesa.git"
 
 #array of string => commit/branch;patch args
 base_patches=(
-    #"vk;merge_requests/38323;"
-    #"tu_direct;merge_requests/38960;"
-	#"vk_barrier;merge_requests/38956;"
-	#"tu_fixds;merge_requests/39236;"
 	"a7xx_gen1_random_stuff;../../patches/a7xx_gen1_random_stuff.patch;"
-	"8g2_ui_glitch;../../patches/8g2_ui_glitch.patch;"
 )
 experimental_patches=(
-	#"copy_raw;merge_requests/35610;"
-	#"tu_autotune;merge_requests/37802;"
 	"force_sysmem_no_autotuner;../../patches/force_sysmem_no_autotuner.patch;"
-	"disable_VK_KHR_workgroup_memory_explicit_layout;../../patches/disable_KHR_workgroup_memory_explicit_layout.patch;"
+	# "disable_VK_KHR_workgroup_memory_explicit_layout;../../patches/disable_KHR_workgroup_memory_explicit_layout.patch;"
 )
 failed_patches=()
 commit=""
@@ -218,7 +211,7 @@ port_lib_for_adrenotool(){
 	cat <<EOF >"meta.json"
 {
   "schemaVersion": 1,
-  "name": "Turnip - $mesa_version - $date - $commit_short$suffix",
+  "name": "Turnip - $mesa_version - vk$vulkan_version - $date - $commit_short$suffix",
   "description": "Compiled from Mesa, Commit $commit_short$suffix",
   "author": "mesa",
   "packageVersion": "1",
@@ -229,7 +222,7 @@ port_lib_for_adrenotool(){
 }
 EOF
 
-	filename=Turnip_"$mesa_version"_"vk$vulkan_version"_"$(date +'%b-%d-%Y')"_"$commit_short"
+	filename=turnip_"$mesa_version"_"dvk$vulkan_version"_"$(date +'%b-%d-%Y')"_"$commit_short"
 	echo "Copy necessary files from work directory ..." $'\n'
 	cp "$workdir"/vulkan.ad07XX.so "$packagedir"
 
