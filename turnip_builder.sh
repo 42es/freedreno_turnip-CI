@@ -15,8 +15,8 @@ base_patches=(
 	"a7xx_gen1_random_stuff;../../patches/a7xx_gen1_random_stuff.patch;"
 )
 experimental_patches=(
-	"force_sysmem_no_autotuner;../../patches/force_sysmem_no_autotuner.patch;"
-	"disable_VK_KHR_workgroup_memory_explicit_layout;../../patches/disable_KHR_workgroup_memory_explicit_layout.patch;"
+	#"force_sysmem_no_autotuner;../../patches/force_sysmem_no_autotuner.patch;"
+	#"disable_VK_KHR_workgroup_memory_explicit_layout;../../patches/disable_KHR_workgroup_memory_explicit_layout.patch;"
 )
 failed_patches=()
 commit=""
