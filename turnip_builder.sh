@@ -190,8 +190,8 @@ EOF
 
 port_lib_for_adrenotool(){
 	echo "Using patchelf to match soname ..."  $'\n'
-	cp "$workdir"/mesa/build-android-aarch64/src/freedreno/vulkan/libvulkan_freedreno.so "$workdir"
-	cd "$workdir"
+	cp -r "$workdir"/mesa/build-android-aarch64/src/freedreno/vulkan/libvulkan_freedreno.so "$workdir"
+	cd -r "$workdir"
 	patchelf --set-soname vulkan.adreno.so libvulkan_freedreno.so
 	mv libvulkan_freedreno.so vulkan.ad07XX.so
 
