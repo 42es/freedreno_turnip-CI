@@ -223,7 +223,7 @@ port_lib_for_adrenotool(){
 	cat <<EOF >"meta.json"
 {
   "schemaVersion": 1,
-  "name": "Turnip - $mesa_version - $date - $commit_short$suffix - patched - Gen8",
+  "name": "Turnip - $mesa_version - $date - $commit_short$suffix - Gen8",
   "description": "Compiled from Mesa(https://github.com/whitebelyash/mesa-tu8) fork, Commit $commit_short$suffix",
   "author": "mesa",
   "packageVersion": "1",
@@ -234,7 +234,7 @@ port_lib_for_adrenotool(){
 }
 EOF
 
-	filename=Turnip_"$mesa_version"_"vk$vulkan_version"_"$(date +'%b-%d-%Y')"_"$commit_short"_patched_Gen8
+	filename=Turnip_"$mesa_version"_"vk$vulkan_version"_"$(date +'%b-%d-%Y')"_"$commit_short"_Gen8
 	echo "Copy necessary files from work directory ..." $'\n'
 	cp "$workdir"/vulkan.ad08XX.so "$packagedir"
 
