@@ -6,31 +6,17 @@ nocolor='\033[0m'
 deps="meson ninja patchelf unzip curl pip flex bison zip git"
 workdir="$(pwd)/turnip_workdir"
 packagedir="$workdir/turnip_module"
-ndkver="android-ndk-r28"
-sdkver="30"
+ndkver="android-ndk-r29"
+sdkver="35"
 mesasrc="https://gitlab.freedesktop.org/mesa/mesa.git"
 
 #array of string => commit/branch;patch args
 base_patches=(
-		#"vk;merge_requests/38323;"
-		#"tu_direct;merge_requests/38960;"
-		#"vk_barrier;merge_requests/38956;"
-		#"tu_fixds;merge_requests/39236;"
-		#"tu_kgsl;merge_requests/39695;"
-		#"tu_buffer;merge_requests/39714;"
-        #'disable_VK_KHR_workgroup_memory_explicit_layout;../../patches/disable_KHR_workgroup_memory_explicit_layout.patch;'
-        "a7xx_gen1_random_stuff;../../patches/a7xx_gen1_random_stuff.patch;"
-	    "8g2_ui_glitch;../../patches/8g2_ui_glitch.patch;"
-	    #"tu_gen8;../../patches/tu_gen8.patch"
-        #"tu_gen8_clean;../../patches/tu_gen8_clean.patch"
-        #"tu_gen8_clean_flushall;../../patches/tu_gen8_clean_flushall.patch"
-        #"tu_gen8_kgsl_android;../../patches/tu_gen8_kgsl_android.patch"
-        #"vk_sync_timeline;../../patches/vk_sync_timeline.patch"
+	"a7xx_gen1_random_stuff;../../patches/a7xx_gen1_random_stuff.patch;"
 )
 experimental_patches=(
-        #"copy_raw;merge_requests/35610;"
-		#"tu_autotune;merge_requests/37802;"
-        "force_sysmem_no_autotuner;../../patches/force_sysmem_no_autotuner.patch;"
+	"force_sysmem_no_autotuner;../../patches/force_sysmem_no_autotuner.patch;"
+	# "disable_VK_KHR_workgroup_memory_explicit_layout;../../patches/disable_KHR_workgroup_memory_explicit_layout.patch;"
 )
 failed_patches=()
 commit=""
@@ -61,9 +47,6 @@ prep () {
 }
 
 check_deps(){
-	sudo apt remove meson
-	pip install meson PyYAML
-
 	echo "Checking system for required Dependencies ..."
 	for deps_chk in $deps;
 		do
@@ -187,9 +170,10 @@ build_lib_for_android(){
 ar = '$ndk/llvm-ar'
 c = ['ccache', '$ndk/aarch64-linux-android$sdkver-clang']
 cpp = ['ccache', '$ndk/aarch64-linux-android$sdkver-clang++', '-fno-exceptions', '-fno-unwind-tables', '-fno-asynchronous-unwind-tables', '--start-no-unused-arguments', '-static-libstdc++', '--end-no-unused-arguments']
-c_ld = '$ndk/ld.lld'
-cpp_ld = '$ndk/ld.lld'
-strip = '$ndk/llvm-strip'
+c_ld = 'lld'
+cpp_ld = 'lld'
+strip = '$ndk/aarch64-linux-android-strip'
+pkgconfig = ['env', 'PKG_CONFIG_LIBDIR=NDKDIR/pkgconfig', '/usr/bin/pkg-config']
 [host_machine]
 system = 'android'
 cpu_family = 'aarch64'
@@ -198,18 +182,7 @@ endian = 'little'
 EOF
 
 	echo "Generating build files ..." $'\n'
-	meson setup build-android-aarch64 --cross-file "$workdir"/mesa/android-aarch64 \
- 		-Dbuildtype=release \
-   		-Dplatforms=android \
-     	-Dplatform-sdk-version=$sdkver \
-       	-Dandroid-stub=true \
-		-Dandroid-libbacktrace=disabled \
-		-Degl=disabled \
-	 	-Dgallium-drivers= \
-  		-Dvulkan-drivers=freedreno \
-  	 	-Dvulkan-beta=true \
-  		-Dfreedreno-kmds=kgsl \
-        -Dstrip=true &> "$workdir"/meson_log
+	meson setup build-android-aarch64 --cross-file "$workdir"/mesa/android-aarch64 -Dbuildtype=release -Dplatforms=android -Dplatform-sdk-version=$sdkver -Dandroid-stub=true -Dgallium-drivers= -Dvulkan-drivers=freedreno -Dvulkan-beta=true -Dfreedreno-kmds=kgsl -Db_lto=true -Degl=disabled &> "$workdir"/meson_log
 
 	echo "Compiling build files ..." $'\n'
 	ninja -C build-android-aarch64 &> "$workdir"/ninja_log
@@ -220,11 +193,11 @@ port_lib_for_adrenotool(){
 	cp "$workdir"/mesa/build-android-aarch64/src/freedreno/vulkan/libvulkan_freedreno.so "$workdir"
 	cd "$workdir"
 	patchelf --set-soname vulkan.adreno.so libvulkan_freedreno.so
-	mv libvulkan_freedreno.so vulkan.adreno.so
+	mv libvulkan_freedreno.so vulkan.ad07XX.so
 
-	#if ! [ -a vulkan.adreno.so ]; then
-	#	echo -e "$red Build failed! $nocolor" && exit 1
-	#fi
+	if ! [ -a vulkan.ad07XX.so ]; then
+		echo -e "$red Build failed! $nocolor" && exit 1
+	fi
 
 	mkdir -p "$packagedir" && cd "$_"
 
@@ -238,20 +211,20 @@ port_lib_for_adrenotool(){
 	cat <<EOF >"meta.json"
 {
   "schemaVersion": 1,
-  "name": "Turnip-$mesa_version-vk$vulkan_version-$date-$commit_short$suffix",
+  "name": "Turnip - $mesa_version - vk$vulkan_version - $date - $commit_short$suffix",
   "description": "Compiled from Mesa, Commit $commit_short$suffix",
   "author": "mesa",
   "packageVersion": "1",
   "vendor": "Mesa",
   "driverVersion": "$mesa_version/vk$vulkan_version",
-  "minApi": 30,
-  "libraryName": "vulkan.adreno.so"
+  "minApi": 27,
+  "libraryName": "vulkan.ad07XX.so"
 }
 EOF
 
 	filename=turnip_"$mesa_version"_"vk$vulkan_version"_"$(date +'%b-%d-%Y')"_"$commit_short"
 	echo "Copy necessary files from work directory ..." $'\n'
-	cp "$workdir"/vulkan.adreno.so "$packagedir"
+	cp "$workdir"/vulkan.ad07XX.so "$packagedir"
 
 	echo "Packing files in to adrenotool package ..." $'\n'
 	zip -9 "$workdir"/"$filename$suffix".zip ./*
