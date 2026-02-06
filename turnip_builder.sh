@@ -19,6 +19,13 @@ base_patches=(
 		#"tu_kgsl;merge_requests/39695;"
 		#"tu_buffer;merge_requests/39714;"
         #'disable_VK_KHR_workgroup_memory_explicit_layout;../../patches/disable_KHR_workgroup_memory_explicit_layout.patch;'
+        #"a7xx_gen1_random_stuff;../../patches/a7xx_gen1_random_stuff.patch;"
+	    #"8g2_ui_glitch;../../patches/8g2_ui_glitch.patch;"
+	    "tu_gen8;../../patches/tu_gen8.patch"
+        #"tu_gen8_clean;../../patches/tu_gen8_clean.patch"
+        #"tu_gen8_clean_flushall;../../patches/tu_gen8_clean_flushall.patch"
+        #"tu_gen8_kgsl_android;../../patches/tu_gen8_kgsl_android.patch"
+        "vk_sync_timeline;../../patches/vk_sync_timeline.patch"
 )
 experimental_patches=(
         #"copy_raw;merge_requests/35610;"
