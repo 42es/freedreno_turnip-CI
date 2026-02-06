@@ -99,7 +99,7 @@ prepare_workdir(){
 		echo "Cloning mesa ..." $'\n'
 		git clone --depth=1 "$mesasrc"
 
-		cd mesa-tu8
+		cd mesa
 		commit_short=$(git rev-parse --short HEAD)
 		commit=$(git rev-parse HEAD)
 		mesa_version=$(cat VERSION | xargs)
