@@ -12,12 +12,17 @@ mesasrc="https://github.com/whitebelyash/mesa-tu8.git"
 
 #array of string => commit/branch;patch args
 base_patches=(
-  #"vk;merge_requests/38323;"
-  #"tu_direct;merge_requests/38960;"
+    #"vk;merge_requests/38323;"
+    #"tu_direct;merge_requests/38960;"
 	#"vk_barrier;merge_requests/38956;"
 	#"tu_fixds;merge_requests/39236;"
-	#"a7xx_gen1_random_stuff;../../patches/a7xx_gen1_random_stuff.patch;"
-	#"8g2_ui_glitch;../../patches/8g2_ui_glitch.patch;"
+	"a7xx_gen1_random_stuff;../../patches/a7xx_gen1_random_stuff.patch;"
+	"8g2_ui_glitch;../../patches/8g2_ui_glitch.patch;"
+	"tu_gen8;../../patches/tu_gen8.patch"
+    #"tu_gen8_clean;../../patches/tu_gen8_clean.patch"
+    #"tu_gen8_clean_flushall;../../patches/tu_gen8_clean_flushall.patch"
+    #"tu_gen8_kgsl_android;../../patches/tu_gen8_kgsl_android.patch"
+    "vk_sync_timeline;../../patches/vk_sync_timeline.patch"
 )
 experimental_patches=(
 	#"copy_raw;merge_requests/35610;"
@@ -218,7 +223,7 @@ port_lib_for_adrenotool(){
 	cat <<EOF >"meta.json"
 {
   "schemaVersion": 1,
-  "name": "Turnip - $mesa_version - $date - $commit_short$suffix - Gen8",
+  "name": "Turnip - $mesa_version - $date - $commit_short$suffix - patched - Gen8",
   "description": "Compiled from Mesa(https://github.com/whitebelyash/mesa-tu8) fork, Commit $commit_short$suffix",
   "author": "mesa",
   "packageVersion": "1",
@@ -229,7 +234,7 @@ port_lib_for_adrenotool(){
 }
 EOF
 
-	filename=Turnip_"$mesa_version"_"vk$vulkan_version"_"$(date +'%b-%d-%Y')"_"$commit_short"_Gen8
+	filename=Turnip_"$mesa_version"_"vk$vulkan_version"_"$(date +'%b-%d-%Y')"_"$commit_short"_patched_Gen8
 	echo "Copy necessary files from work directory ..." $'\n'
 	cp "$workdir"/vulkan.ad08XX.so "$packagedir"
 
