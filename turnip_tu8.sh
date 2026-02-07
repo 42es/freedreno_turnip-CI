@@ -35,6 +35,11 @@ clear
 # there are 4 functions here, simply comment to disable.
 # you can insert your own function and make a pull request.
 run_all(){
+	echo "====== Begin building TU V$BUILD_VERSION! ======"
+	check_deps
+	prepare_workdir
+	#build_lib_for_android gen8
+	build_lib_for_android gen8-yuck
 	check_deps
 	prep
 
