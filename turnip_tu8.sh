@@ -213,9 +213,9 @@ port_lib_for_adrenotool(){
 	cp "$workdir"/mesa-tu8/build-android-aarch64/src/freedreno/vulkan/libvulkan_freedreno.so "$workdir"
 	cd "$workdir"
 	patchelf --set-soname vulkan.adreno.so libvulkan_freedreno.so
-	mv libvulkan_freedreno.so vulkan.adreno.so
+	mv libvulkan_freedreno.so vulkan.ad08xx.so
 
-	#if ! [ -a vulkan.adreno.so ]; then
+	#if ! [ -a vulkan.ad08xx.so ]; then
 	#	echo -e "$red Build failed! $nocolor" && exit 1
 	#fi
 
@@ -231,14 +231,14 @@ port_lib_for_adrenotool(){
 	cat <<EOF >"meta.json"
 {
   "schemaVersion": 1,
-  "name": "Turnip - $date - $commit_short$suffix",
+  "name": "Turnip - $mesa_version - $date - $commit_short$suffix",
   "description": "Compiled from Mesa, Commit $commit_short$suffix",
   "author": "mesa",
   "packageVersion": "1",
   "vendor": "Mesa",
   "driverVersion": "$mesa_version/vk$vulkan_version",
   "minApi": 30,
-  "libraryName": "vulkan.adreno.so"
+  "libraryName": "vulkan.ad08xx.so"
 }
 EOF
 
