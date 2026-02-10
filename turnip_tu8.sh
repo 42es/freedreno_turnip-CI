@@ -6,24 +6,24 @@ nocolor='\033[0m'
 deps="meson ninja patchelf unzip curl pip flex bison zip git"
 workdir="$(pwd)/turnip_workdir"
 packagedir="$workdir/turnip_module"
-ndkver="android-ndk-r29"
-sdkver="35"
+ndkver="android-ndk-r28"
+sdkver="30"
 mesasrc="https://github.com/whitebelyash/mesa-tu8.git"
 
 #array of string => commit/branch;patch args
 base_patches=(
-  #"vk;merge_requests/38323;"
-  #"tu_direct;merge_requests/38960;"
-	#"vk_barrier;merge_requests/38956;"
-	#"tu_fixds;merge_requests/39236;"
-	#"a7xx_gen1_random_stuff;../../patches/a7xx_gen1_random_stuff.patch;"
-	#"8g2_ui_glitch;../../patches/8g2_ui_glitch.patch;"
+		#"vk;merge_requests/38323;"
+		#"tu_direct;merge_requests/38960;"
+		#"vk_barrier;merge_requests/38956;"
+		#"tu_fixds;merge_requests/39236;"
+		#"tu_ubwc;merge_requests/39576;"
+        #'disable_VK_KHR_workgroup_memory_explicit_layout;../../patches/disable_KHR_workgroup_memory_explicit_layout.patch;'
 )
 experimental_patches=(
-	#"copy_raw;merge_requests/35610;"
-	#"tu_autotune;merge_requests/37802;"
-	#"force_sysmem_no_autotuner;../../patches/force_sysmem_no_autotuner.patch;"
-	#"disable_VK_KHR_workgroup_memory_explicit_layout;../../patches/disable_KHR_workgroup_memory_explicit_layout.patch;"
+        #"copy_raw;merge_requests/35610;"
+		#"tu_autotune;merge_requests/37802;"
+		#"tu_kgsl;merge_requests/39751;"
+        #"force_sysmem_no_autotuner;../../patches/force_sysmem_no_autotuner.patch;"
 )
 failed_patches=()
 commit=""
@@ -35,6 +35,7 @@ clear
 # there are 4 functions here, simply comment to disable.
 # you can insert your own function and make a pull request.
 run_all(){
+	check_deps
 	prep
 
 	if (( ${#base_patches[@]} )); then
@@ -53,6 +54,9 @@ prep () {
 }
 
 check_deps(){
+	sudo apt remove meson
+	pip install meson PyYAML
+
 	echo "Checking system for required Dependencies ..."
 	for deps_chk in $deps;
 		do
@@ -98,7 +102,7 @@ prepare_workdir(){
 		echo "Cloning mesa-tu8 ..." $'\n'
 		git clone --depth=1 "$mesasrc"
 
-		cd mesa-tu8
+		cd mesa
 		commit_short=$(git rev-parse --short HEAD)
 		commit=$(git rev-parse HEAD)
 		mesa_version=$(cat VERSION | xargs)
@@ -158,7 +162,7 @@ patch_to_description() {
 		if [[ $patch_source == *"../.."* ]]; then
 			echo "- $patch_name, $patch_source, $patch_args" >> description
 		else 
-			echo "- $patch_name, [$patch_source](https://github.com/whitebelyash/mesa-tu8/src/mesa/-/$patch_source), $patch_args" >> description
+			echo "- $patch_name, [$patch_source](https://github.com/whitebelyash/mesa-tu8/srcmesa/-/$patch_source), $patch_args" >> description
 		fi
 	done
 }
@@ -176,10 +180,9 @@ build_lib_for_android(){
 ar = '$ndk/llvm-ar'
 c = ['ccache', '$ndk/aarch64-linux-android$sdkver-clang']
 cpp = ['ccache', '$ndk/aarch64-linux-android$sdkver-clang++', '-fno-exceptions', '-fno-unwind-tables', '-fno-asynchronous-unwind-tables', '--start-no-unused-arguments', '-static-libstdc++', '--end-no-unused-arguments']
-c_ld = 'lld'
-cpp_ld = 'lld'
-strip = '$ndk/aarch64-linux-android-strip'
-pkgconfig = ['env', 'PKG_CONFIG_LIBDIR=NDKDIR/pkgconfig', '/usr/bin/pkg-config']
+c_ld = '$ndk/ld.lld'
+cpp_ld = '$ndk/ld.lld'
+strip = '$ndk/llvm-strip'
 [host_machine]
 system = 'android'
 cpu_family = 'aarch64'
@@ -188,7 +191,18 @@ endian = 'little'
 EOF
 
 	echo "Generating build files ..." $'\n'
-	meson setup build-android-aarch64 --cross-file "$workdir"/mesa-tu8/android-aarch64 -Dbuildtype=release -Dplatforms=android -Dplatform-sdk-version=$sdkver -Dandroid-stub=true -Dgallium-drivers= -Dvulkan-drivers=freedreno -Dvulkan-beta=true -Dfreedreno-kmds=kgsl -Db_lto=true -Degl=disabled &> "$workdir"/meson_log
+	meson setup build-android-aarch64 --cross-file "$workdir"/mesa/android-aarch64 \
+ 		-Dbuildtype=release \
+   		-Dplatforms=android \
+     	-Dplatform-sdk-version=$sdkver \
+       	-Dandroid-stub=true \
+		-Dandroid-libbacktrace=disabled \
+		-Degl=disabled \
+	 	-Dgallium-drivers= \
+  		-Dvulkan-drivers=freedreno \
+  	 	-Dvulkan-beta=true \
+  		-Dfreedreno-kmds=kgsl \
+        -Dstrip=true &> "$workdir"/meson_log
 
 	echo "Compiling build files ..." $'\n'
 	ninja -C build-android-aarch64 &> "$workdir"/ninja_log
@@ -199,11 +213,11 @@ port_lib_for_adrenotool(){
 	cp "$workdir"/mesa-tu8/build-android-aarch64/src/freedreno/vulkan/libvulkan_freedreno.so "$workdir"
 	cd "$workdir"
 	patchelf --set-soname vulkan.adreno.so libvulkan_freedreno.so
-	mv libvulkan_freedreno.so vulkan.ad08XX.so
+	mv libvulkan_freedreno.so vulkan.adreno.so
 
-	if ! [ -a vulkan.ad08XX.so ]; then
-		echo -e "$red Build failed! $nocolor" && exit 1
-	fi
+	#if ! [ -a vulkan.adreno.so ]; then
+	#	echo -e "$red Build failed! $nocolor" && exit 1
+	#fi
 
 	mkdir -p "$packagedir" && cd "$_"
 
@@ -217,20 +231,20 @@ port_lib_for_adrenotool(){
 	cat <<EOF >"meta.json"
 {
   "schemaVersion": 1,
-  "name": "Turnip - $mesa_version - $date - $commit_short$suffix - Gen8",
-  "description": "Compiled from Mesa(https://github.com/whitebelyash/mesa-tu8) fork, Commit $commit_short$suffix",
+  "name": "Turnip - $date - $commit_short$suffix",
+  "description": "Compiled from Mesa, Commit $commit_short$suffix",
   "author": "mesa",
   "packageVersion": "1",
   "vendor": "Mesa",
   "driverVersion": "$mesa_version/vk$vulkan_version",
-  "minApi": 27,
-  "libraryName": "vulkan.ad08XX.so"
+  "minApi": 30,
+  "libraryName": "vulkan.adreno.so"
 }
 EOF
 
 	filename=Turnip_"$mesa_version"_"vk$vulkan_version"_"$(date +'%b-%d-%Y')"_"$commit_short"_Gen8
 	echo "Copy necessary files from work directory ..." $'\n'
-	cp "$workdir"/vulkan.ad08XX.so "$packagedir"
+	cp "$workdir"/vulkan.adreno.so "$packagedir"
 
 	echo "Packing files in to adrenotool package ..." $'\n'
 	zip -9 "$workdir"/"$filename$suffix".zip ./*
@@ -241,7 +255,7 @@ EOF
 		echo "Turnip - $mesa_version - $date" > release
 		echo "$mesa_version"_"$commit_short" > tag
 		echo  $filename > filename
-		echo "### Base commit : [$commit_short](https://github.com/whitebelyash/mesa-tu8)" > description
+		echo "### Base commit : [$commit_short](https://github.com/whitebelyash/mesa-tu8/-/commit/$commit_short)" > description
 		echo "false" > patched
 		echo "false" > experimental
 	else		
