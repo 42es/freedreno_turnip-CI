@@ -102,7 +102,7 @@ prepare_workdir(){
 		echo "Cloning mesa-tu8 ..." $'\n'
 		git clone --depth=1 "$mesasrc"
 
-		cd mesa
+		cd mesa-tu8
 		commit_short=$(git rev-parse --short HEAD)
 		commit=$(git rev-parse HEAD)
 		mesa_version=$(cat VERSION | xargs)
@@ -112,7 +112,7 @@ prepare_workdir(){
 		patch=$(awk -F'VK_HEADER_VERSION |\n#define' '{print $2}' <<< $(cat include/vulkan/vulkan_core.h) | xargs)
 		vulkan_version="$major.$minor.$patch"
 	else		
-		cd mesa
+		cd mesa-tu8
 
 		if [ $1 == "patched" ]; then 
 			apply_patches ${base_patches[@]}
@@ -191,7 +191,7 @@ endian = 'little'
 EOF
 
 	echo "Generating build files ..." $'\n'
-	meson setup build-android-aarch64 --cross-file "$workdir"/mesa/android-aarch64 \
+	meson setup build-android-aarch64 --cross-file "$workdir"/mesa-tu8/android-aarch64 \
  		-Dbuildtype=release \
    		-Dplatforms=android \
      	-Dplatform-sdk-version=$sdkver \
