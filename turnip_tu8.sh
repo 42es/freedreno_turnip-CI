@@ -139,7 +139,7 @@ apply_patches() {
 			fi
 		else 
 			patch_file="${patch_source#*\/}"
-			curl --output "../$patch_file".patch -k --retry-delay 30 --retry 5 -f --retry-all-errors https://github.com/whitebelyash/mesa-tu8/src/mesa/-/"$patch_source".patch
+			curl --output "../$patch_file".patch -k --retry-delay 30 --retry 5 -f --retry-all-errors https://github.com/whitebelyash/mesa-tu8/src/-/"$patch_source".patch
 			sleep 1
 
 			if git apply $patch_args "../$patch_file".patch ; then
@@ -162,7 +162,7 @@ patch_to_description() {
 		if [[ $patch_source == *"../.."* ]]; then
 			echo "- $patch_name, $patch_source, $patch_args" >> description
 		else 
-			echo "- $patch_name, [$patch_source](https://github.com/whitebelyash/mesa-tu8/srcmesa/-/$patch_source), $patch_args" >> description
+			echo "- $patch_name, [$patch_source](https://github.com/whitebelyash/mesa-tu8/src/-/$patch_source), $patch_args" >> description
 		fi
 	done
 }
