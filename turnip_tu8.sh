@@ -3,34 +3,36 @@ green='\033[0;32m'
 red='\033[0;31m'
 nocolor='\033[0m'
 
-deps="meson ninja patchelf unzip curl pip flex bison zip git"
+deps="meson ninja unzip curl pip flex bison zip git"
 workdir="$(pwd)/turnip_workdir"
 packagedir="$workdir/turnip_module"
-ndkver="android-ndk-r28"
-sdkver="30"
-mesasrc="https://github.com/whitebelyash/mesa-tu8.git"
+ndkver="android-ndk-r29"
+sdkver="36"
+cver="35"
+mesasrc="https://github.com/whitebelyash/mesa-unified.git"
+driver="vulkan.turnip.so"
 
 #array of string => commit/branch;patch args
-base_patches=(
-		#"vk;merge_requests/38323;"
-		#"tu_direct;merge_requests/38960;"
-		#"vk_barrier;merge_requests/38956;"
-		#"tu_fixds;merge_requests/39236;"
-		#"tu_ubwc;merge_requests/39576;"
+#base_patches=(
+#		"vk;merge_requests/38323;"
+#		"wsi_syncobj;merge_requests/31149;"
+#		"tu_direct;merge_requests/38960;"
+#		"vk_barrier;merge_requests/38956;"
+#		"wsi_immediate;merge_requests/40584;"
+#		"wsi_fix;merge_requests/41188;"
         #'disable_VK_KHR_workgroup_memory_explicit_layout;../../patches/disable_KHR_workgroup_memory_explicit_layout.patch;'
 )
-experimental_patches=(
+#experimental_patches=(
+		#"tu_ubwc;merge_requests/39491;"
         #"copy_raw;merge_requests/35610;"
-		#"tu_autotune;merge_requests/37802;"
-		#"tu_kgsl;merge_requests/39751;"
         #"force_sysmem_no_autotuner;../../patches/force_sysmem_no_autotuner.patch;"
 )
-failed_patches=()
-commit=""
-commit_short=""
-mesa_version=""
-vulkan_version=""
-clear
+#failed_patches=()
+#commit=""
+#commit_short=""
+#mesa_version=""
+#vulkan_version=""
+#clear
 
 # there are 4 functions here, simply comment to disable.
 # you can insert your own function and make a pull request.
@@ -94,15 +96,14 @@ prepare_workdir(){
 	fi
 
 	if [ -z "$1" ]; then
-		if [ -d mesa-tu8 ]; then
-			echo "Removing old mesa-tu8 ..." $'\n'
-			rm -rf mesa-tu8
+		if [ -d mesa ]; then
+			echo "Removing old mesa ..." $'\n'
+			rm -rf mesa
 		fi
 		
-		echo "Cloning mesa-tu8 ..." $'\n'
-		git clone --depth=1 "$mesasrc"
-
-		cd mesa-tu8
+		echo "Cloning mesa ..." $'\n'
+		git clone --depth=100 "$mesasrc" "$workdir/mesa"
+		cd mesa
 		commit_short=$(git rev-parse --short HEAD)
 		commit=$(git rev-parse HEAD)
 		mesa_version=$(cat VERSION | xargs)
@@ -112,7 +113,7 @@ prepare_workdir(){
 		patch=$(awk -F'VK_HEADER_VERSION |\n#define' '{print $2}' <<< $(cat include/vulkan/vulkan_core.h) | xargs)
 		vulkan_version="$major.$minor.$patch"
 	else		
-		cd mesa-tu8
+		cd mesa
 
 		if [ $1 == "patched" ]; then 
 			apply_patches ${base_patches[@]}
@@ -139,7 +140,7 @@ apply_patches() {
 			fi
 		else 
 			patch_file="${patch_source#*\/}"
-			curl --output "../$patch_file".patch -k --retry-delay 30 --retry 5 -f --retry-all-errors https://github.com/whitebelyash/mesa-tu8/src/-/"$patch_source".patch
+			curl --output "../$patch_file".patch -k --retry-delay 30 --retry 5 -f --retry-all-errors https://gitlab.freedesktop.org/mesa/mesa/-/"$patch_source".patch
 			sleep 1
 
 			if git apply $patch_args "../$patch_file".patch ; then
@@ -162,7 +163,7 @@ patch_to_description() {
 		if [[ $patch_source == *"../.."* ]]; then
 			echo "- $patch_name, $patch_source, $patch_args" >> description
 		else 
-			echo "- $patch_name, [$patch_source](https://github.com/whitebelyash/mesa-tu8/src/-/$patch_source), $patch_args" >> description
+			echo "- $patch_name, [$patch_source](https://gitlab.freedesktop.org/mesa/mesa/-/$patch_source), $patch_args" >> description
 		fi
 	done
 }
@@ -171,15 +172,19 @@ build_lib_for_android(){
 	echo "Creating meson cross file ..." $'\n'
 	if [ -z "${ANDROID_NDK_LATEST_HOME}" ]; then
 		ndk="$workdir/$ndkver/toolchains/llvm/prebuilt/linux-x86_64/bin"
+		ndk_sys="$workdir/$ndkver/toolchains/llvm/prebuilt/linux-x86_64/sysroot"
 	else	
 		ndk="$ANDROID_NDK_LATEST_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin"
+		ndk_sys="$ANDROID_NDK_LATEST_HOME/toolchains/llvm/prebuilt/linux-x86_64/sysroot"
 	fi
-
+	
+    [ ! -f "$ndk/aarch64-linux-android${cver}-clang" ] && cver="34"
+	
 	cat <<EOF >"android-aarch64"
 [binaries]
 ar = '$ndk/llvm-ar'
-c = ['ccache', '$ndk/aarch64-linux-android$sdkver-clang']
-cpp = ['ccache', '$ndk/aarch64-linux-android$sdkver-clang++', '-fno-exceptions', '-fno-unwind-tables', '-fno-asynchronous-unwind-tables', '--start-no-unused-arguments', '-static-libstdc++', '--end-no-unused-arguments']
+c = ['ccache', '$ndk/aarch64-linux-android$cver-clang', '--sysroot=$ndk_sys']
+cpp = ['ccache', '$ndk/aarch64-linux-android$cver-clang++', '-fno-exceptions', '-fno-unwind-tables', '-fno-asynchronous-unwind-tables', '--start-no-unused-arguments', '-static-libstdc++', '--end-no-unused-arguments', '--sysroot=$ndk_sys']
 c_ld = '$ndk/ld.lld'
 cpp_ld = '$ndk/ld.lld'
 strip = '$ndk/llvm-strip'
@@ -191,31 +196,27 @@ endian = 'little'
 EOF
 
 	echo "Generating build files ..." $'\n'
-	meson setup build-android-aarch64 --cross-file "$workdir"/mesa-tu8/android-aarch64 \
+	meson setup build-android-aarch64 --cross-file "$workdir"/mesa/android-aarch64 \
  		-Dbuildtype=release \
    		-Dplatforms=android \
      	-Dplatform-sdk-version=$sdkver \
        	-Dandroid-stub=true \
-		-Dandroid-libbacktrace=disabled \
 		-Degl=disabled \
 	 	-Dgallium-drivers= \
   		-Dvulkan-drivers=freedreno \
-  	 	-Dvulkan-beta=true \
-  		-Dfreedreno-kmds=kgsl \
-        -Dstrip=true &> "$workdir"/meson_log
+		-Dfreedreno-kmds=kgsl \
+  	 	-Dvulkan-beta=true &> "$workdir"/meson_log
+        
 
 	echo "Compiling build files ..." $'\n'
 	ninja -C build-android-aarch64 &> "$workdir"/ninja_log
 }
 
 port_lib_for_adrenotool(){
-	echo "Using patchelf to match soname ..."  $'\n'
-	cp "$workdir"/mesa-tu8/build-android-aarch64/src/freedreno/vulkan/libvulkan_freedreno.so "$workdir"
+	cp "$workdir"/mesa/build-android-aarch64/src/freedreno/vulkan/libvulkan_freedreno.so "$workdir"/"$driver"
 	cd "$workdir"
-	patchelf --set-soname vulkan.adreno.so libvulkan_freedreno.so
-	mv libvulkan_freedreno.so vulkan.ad08xx.so
 
-	#if ! [ -a vulkan.ad08xx.so ]; then
+	#if ! [ -a "$driver" ]; then
 	#	echo -e "$red Build failed! $nocolor" && exit 1
 	#fi
 
@@ -237,14 +238,14 @@ port_lib_for_adrenotool(){
   "packageVersion": "1",
   "vendor": "Mesa",
   "driverVersion": "$mesa_version/vk$vulkan_version",
-  "minApi": 30,
-  "libraryName": "vulkan.ad08xx.so"
+  "minApi": 28,
+  "libraryName": "$driver"
 }
 EOF
 
-	filename=Turnip_"$mesa_version"_"vk$vulkan_version"_"$(date +'%b-%d-%Y')"_"$commit_short"_Gen8
+	filename=Turnip_"$mesa_version"_"vk$vulkan_version"_"$(date +'%b-%d-%Y')"_"$commit_short"
 	echo "Copy necessary files from work directory ..." $'\n'
-	cp "$workdir"/vulkan.adreno.so "$packagedir"
+	cp "$workdir"/"$driver" "$packagedir"
 
 	echo "Packing files in to adrenotool package ..." $'\n'
 	zip -9 "$workdir"/"$filename$suffix".zip ./*
@@ -252,10 +253,10 @@ EOF
 	cd "$workdir"
 
 	if [ -z "$1" ]; then
-		echo "Turnip - $mesa_version - $date" > release
+		echo "Turnip - $mesa_version - vk$vulkan_version - $date" > release
 		echo "$mesa_version"_"$commit_short" > tag
 		echo  $filename > filename
-		echo "### Base commit : [$commit_short](https://github.com/whitebelyash/mesa-tu8/-/commit/$commit_short)" > description
+		echo "### Base commit : [$commit_short](https://gitlab.freedesktop.org/mesa/mesa/-/commit/$commit_short)" > description
 		echo "false" > patched
 		echo "false" > experimental
 	else		
