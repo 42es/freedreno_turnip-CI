@@ -107,10 +107,10 @@ prepare_workdir(){
 		commit_short=$(git rev-parse --short HEAD)
 		commit=$(git rev-parse HEAD)
 		mesa_version=$(cat VERSION | xargs)
-		version=$(awk -F'COMPLETE VK_MAKE_API_VERSION(|)' '{print $2}' <<< $(cat include/vulkan/vulkan_core.h) | xargs)
+		version=$(awk -F'COMPLETE VK_MAKE_API_VERSION(|)' '{print $2}' <<< $(cat https://github.com/whitebelyash/mesa-unified/include/vulkan/vulkan_core.h) | xargs)
 		major=$(echo $version | cut -d "," -f 2 | xargs)
 		minor=$(echo $version | cut -d "," -f 3 | xargs)
-		patch=$(awk -F'VK_HEADER_VERSION |\n#define' '{print $2}' <<< $(cat include/vulkan/vulkan_core.h) | xargs)
+		patch=$(awk -F'VK_HEADER_VERSION |\n#define' '{print $2}' <<< $(cat https://github.com/whitebelyash/mesa-unified/include/vulkan/vulkan_core.h) | xargs)
 		vulkan_version="$major.$minor.$patch"
 	else		
 		cd mesa-unified
