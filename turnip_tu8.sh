@@ -9,7 +9,7 @@ packagedir="$workdir/turnip_module"
 ndkver="android-ndk-r29"
 sdkver="36"
 cver="35"
-mesasrc="https://github.com/whitebelyash/mesa-unified.git"
+mesasrc="https://github.com/whitebelyash/mesa-unified/tree/turnip/gen8"
 driver="vulkan.turnip.so"
 
 #array of string => commit/branch;patch args
@@ -23,7 +23,7 @@ driver="vulkan.turnip.so"
         #'disable_VK_KHR_workgroup_memory_explicit_layout;../../patches/disable_KHR_workgroup_memory_explicit_layout.patch;'
 #)
 #experimental_patches=(
-		#"tu_ubwc;merge_requests/39491;"
+#		"tu_ubwc;merge_requests/39491;"
         #"copy_raw;merge_requests/35610;"
         #"force_sysmem_no_autotuner;../../patches/force_sysmem_no_autotuner.patch;"
 #)
@@ -103,17 +103,17 @@ prepare_workdir(){
 		
 		echo "Cloning mesa-unified ..." $'\n'
 		git clone --depth=100 "$mesasrc" "$workdir/mesa-unified"
-		cd mesa
+		cd mesa-for-android-container
 		commit_short=$(git rev-parse --short HEAD)
 		commit=$(git rev-parse HEAD)
 		mesa_version=$(cat VERSION | xargs)
-		version=$(awk -F'COMPLETE VK_MAKE_API_VERSION(|)' '{print $2}' <<< $(cat https://github.com/whitebelyash/mesa-unified/include/vulkan/vulkan_core.h) | xargs)
+		version=$(awk -F'COMPLETE VK_MAKE_API_VERSION(|)' '{print $2}' <<< $(cat include/vulkan/vulkan_core.h) | xargs)
 		major=$(echo $version | cut -d "," -f 2 | xargs)
 		minor=$(echo $version | cut -d "," -f 3 | xargs)
-		patch=$(awk -F'VK_HEADER_VERSION |\n#define' '{print $2}' <<< $(cat https://github.com/whitebelyash/mesa-unified/include/vulkan/vulkan_core.h) | xargs)
+		patch=$(awk -F'VK_HEADER_VERSION |\n#define' '{print $2}' <<< $(cat include/vulkan/vulkan_core.h) | xargs)
 		vulkan_version="$major.$minor.$patch"
 	else		
-		cd mesa-unified
+		cd mesa-for-android-container
 
 		if [ $1 == "patched" ]; then 
 			apply_patches ${base_patches[@]}
@@ -140,7 +140,7 @@ apply_patches() {
 			fi
 		else 
 			patch_file="${patch_source#*\/}"
-			curl --output "../$patch_file".patch -k --retry-delay 30 --retry 5 -f --retry-all-errors https://github.com/whitebelyash/mesa-unified/src/mesa/-/"$patch_source".patch
+			curl --output "../$patch_file".patch -k --retry-delay 30 --retry 5 -f --retry-all-errors https://github.com/whitebelyash/mesa-unified/tree/turnip/gen8/src/mesa/-/"$patch_source".patch
 			sleep 1
 
 			if git apply $patch_args "../$patch_file".patch ; then
@@ -163,7 +163,7 @@ patch_to_description() {
 		if [[ $patch_source == *"../.."* ]]; then
 			echo "- $patch_name, $patch_source, $patch_args" >> description
 		else 
-			echo "- $patch_name, [$patch_source](https://github.com/whitebelyash/mesa-unified/src/mesa/-/$patch_source), $patch_args" >> description
+			echo "- $patch_name, [$patch_source](https://github.com/whitebelyash/mesa-unified/tree/turnip/gen8/src/mesa/-/$patch_source), $patch_args" >> description
 		fi
 	done
 }
@@ -232,7 +232,7 @@ port_lib_for_adrenotool(){
 	cat <<EOF >"meta.json"
 {
   "schemaVersion": 1,
-  "name": "Turnip - $mesa_version - $date - $commit_short$suffix",
+  "name": "Turnip - $mesa_version - $date - $commit_short$suffix - Gen8",
   "description": "Compiled from Mesa, Commit $commit_short$suffix",
   "author": "mesa",
   "packageVersion": "1",
@@ -243,7 +243,7 @@ port_lib_for_adrenotool(){
 }
 EOF
 
-	filename=Turnip_"$mesa_version"_"vk$vulkan_version"_"$(date +'%b-%d-%Y')"_"$commit_short"
+	filename=Turnip_"$mesa_version"_"vk$vulkan_version"_"$(date +'%b-%d-%Y')"_"$commit_short"_Gen8
 	echo "Copy necessary files from work directory ..." $'\n'
 	cp "$workdir"/"$driver" "$packagedir"
 
@@ -256,13 +256,14 @@ EOF
 		echo "Turnip - $mesa_version - vk$vulkan_version - $date" > release
 		echo "$mesa_version"_"$commit_short" > tag
 		echo  $filename > filename
-		echo "### Base commit : [$commit_short](https://github.com/whitebelyash/mesa-unified/src/mesa/-/commit/$commit_short)" > description
+		echo "### Base commit : [$commit_short](https://github.com/whitebelyash/mesa-unified/tree/turnip/gen8/src//mesa/-/commit/$commit_short)" > description
 		echo "false" > patched
 		echo "false" > experimental
 	else		
 		if [ $1 == "patched" ]; then 
 			echo "## Upstreams / Patches" >> description
-			echo "These have not been merged by Mesa officially yet and may introduce bugs or" >> description			echo "we revert stuff that breaks games but still got merged in (see --reverse)" >> description
+			echo "These have not been merged by Mesa officially yet and may introduce bugs or" >> description
+			echo "we revert stuff that breaks games but still got merged in (see --reverse)" >> description
 			patch_to_description ${base_patches[@]}
 			echo "true" > patched
 			echo "" >> description
