@@ -243,7 +243,7 @@ port_lib_for_adrenotool(){
 }
 EOF
 
-	filename=turnip_"$(date +'%b-%d-%Y')"_"$commit_short"
+	filename=Turnip_"$mesa_version"_"vk$vulkan_version"_"$(date +'%b-%d-%Y')"_"$commit_short"
 	echo "Copy necessary files from work directory ..." $'\n'
 	cp "$workdir"/"$driver" "$packagedir"
 
