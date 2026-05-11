@@ -96,13 +96,13 @@ prepare_workdir(){
 	fi
 
 	if [ -z "$1" ]; then
-		if [ -d mesa ]; then
-			echo "Removing old mesa ..." $'\n'
-			rm -rf mesa
+		if [ -d mesa-unified ]; then
+			echo "Removing old mesa-unified ..." $'\n'
+			rm -rf mesa-unified
 		fi
 		
-		echo "Cloning mesa ..." $'\n'
-		git clone --depth=100 "$mesasrc" "$workdir/mesa"
+		echo "Cloning mesa-unified ..." $'\n'
+		git clone --depth=100 "$mesasrc" "$workdir/mesa-unified"
 		cd mesa
 		commit_short=$(git rev-parse --short HEAD)
 		commit=$(git rev-parse HEAD)
@@ -113,7 +113,7 @@ prepare_workdir(){
 		patch=$(awk -F'VK_HEADER_VERSION |\n#define' '{print $2}' <<< $(cat include/vulkan/vulkan_core.h) | xargs)
 		vulkan_version="$major.$minor.$patch"
 	else		
-		cd mesa
+		cd mesa-unified
 
 		if [ $1 == "patched" ]; then 
 			apply_patches ${base_patches[@]}
@@ -140,7 +140,7 @@ apply_patches() {
 			fi
 		else 
 			patch_file="${patch_source#*\/}"
-			curl --output "../$patch_file".patch -k --retry-delay 30 --retry 5 -f --retry-all-errors https://gitlab.freedesktop.org/mesa/mesa/-/"$patch_source".patch
+			curl --output "../$patch_file".patch -k --retry-delay 30 --retry 5 -f --retry-all-errors https://github.com/whitebelyash/mesa-unified/mesa/-/"$patch_source".patch
 			sleep 1
 
 			if git apply $patch_args "../$patch_file".patch ; then
@@ -163,7 +163,7 @@ patch_to_description() {
 		if [[ $patch_source == *"../.."* ]]; then
 			echo "- $patch_name, $patch_source, $patch_args" >> description
 		else 
-			echo "- $patch_name, [$patch_source](https://gitlab.freedesktop.org/mesa/mesa/-/$patch_source), $patch_args" >> description
+			echo "- $patch_name, [$patch_source](https://github.com/whitebelyash/mesa-unified/mesa/-/$patch_source), $patch_args" >> description
 		fi
 	done
 }
@@ -196,7 +196,7 @@ endian = 'little'
 EOF
 
 	echo "Generating build files ..." $'\n'
-	meson setup build-android-aarch64 --cross-file "$workdir"/mesa/android-aarch64 \
+	meson setup build-android-aarch64 --cross-file "$workdir"/mesa-unified/android-aarch64 \
  		-Dbuildtype=release \
    		-Dplatforms=android \
      	-Dplatform-sdk-version=$sdkver \
@@ -213,7 +213,7 @@ EOF
 }
 
 port_lib_for_adrenotool(){
-	cp "$workdir"/mesa/build-android-aarch64/src/freedreno/vulkan/libvulkan_freedreno.so "$workdir"/"$driver"
+	cp "$workdir"/mesa-unified/build-android-aarch64/src/freedreno/vulkan/libvulkan_freedreno.so "$workdir"/"$driver"
 	cd "$workdir"
 
 	#if ! [ -a "$driver" ]; then
@@ -256,14 +256,13 @@ EOF
 		echo "Turnip - $mesa_version - vk$vulkan_version - $date" > release
 		echo "$mesa_version"_"$commit_short" > tag
 		echo  $filename > filename
-		echo "### Base commit : [$commit_short](https://gitlab.freedesktop.org/mesa/mesa/-/commit/$commit_short)" > description
+		echo "### Base commit : [$commit_short](https://github.com/whitebelyash/mesa-unified/mesa/-/commit/$commit_short)" > description
 		echo "false" > patched
 		echo "false" > experimental
 	else		
 		if [ $1 == "patched" ]; then 
 			echo "## Upstreams / Patches" >> description
-			echo "These have not been merged by Mesa officially yet and may introduce bugs or" >> description
-			echo "we revert stuff that breaks games but still got merged in (see --reverse)" >> description
+			echo "These have not been merged by Mesa officially yet and may introduce bugs or" >> description			echo "we revert stuff that breaks games but still got merged in (see --reverse)" >> description
 			patch_to_description ${base_patches[@]}
 			echo "true" > patched
 			echo "" >> description
