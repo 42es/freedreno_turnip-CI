@@ -232,7 +232,7 @@ port_lib_for_adrenotool(){
 	cat <<EOF >"meta.json"
 {
   "schemaVersion": 1,
-  "name": "Turnip -$mesa_version - vk$vulkan_version - $date - $commit_short$suffix",
+  "name": "Turnip - $mesa_version - $date - $commit_short$suffix",
   "description": "Compiled from Mesa, Commit $commit_short$suffix",
   "author": "mesa",
   "packageVersion": "1",
@@ -253,7 +253,7 @@ EOF
 	cd "$workdir"
 
 	if [ -z "$1" ]; then
-		echo "Turnip - $mesa_version - $date" > release
+		echo "Turnip - $mesa_version - vk$vulkan_version - $date" > release
 		echo "$mesa_version"_"$commit_short" > tag
 		echo  $filename > filename
 		echo "### Base commit : [$commit_short](https://gitlab.freedesktop.org/mesa/mesa/-/commit/$commit_short)" > description
