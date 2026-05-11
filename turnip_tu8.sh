@@ -301,5 +301,3 @@ EOF
 		else echo -e "$green-All done, you can take your zip from this folder;$nocolor" && echo "$workdir"/
 	fi
 }
-
-run_all
