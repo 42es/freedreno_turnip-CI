@@ -8,6 +8,7 @@ This is a bash script to build freedreno/turnip for android as an adrenotool pac
 
 - https://gitlab.freedesktop.org/mesa/mesa
 - https://github.com/lfdevs/mesa-for-android-container
+- https://github.com/whitebelyash/mesa-unified/tree/turnip/gen8
 - https://github.com/whitebelyash/mesa-tu8
 - https://github.com/ilhan-athn7/freedreno_turnip-CI
 - https://github.com/Weab-chan/freedreno_turnip-CI
