@@ -9,30 +9,30 @@ packagedir="$workdir/turnip_module"
 ndkver="android-ndk-r29"
 sdkver="36"
 cver="35"
-mesasrc="https://github.com/lfdevs/mesa-for-android-container/src/mesa"
+mesasrc="https://github.com/lfdevs/mesa-for-android-container"
 driver="vulkan.turnip.so"
 
 #array of string => commit/branch;patch args
-base_patches=(
-		"vk;merge_requests/38323;"
-		"wsi_syncobj;merge_requests/31149;"
-		"tu_direct;merge_requests/38960;"
-		"vk_barrier;merge_requests/38956;"
-		"wsi_immediate;merge_requests/40584;"
-		"wsi_fix;merge_requests/41188;"
+#base_patches=(
+#		"vk;merge_requests/38323;"
+#		"wsi_syncobj;merge_requests/31149;"
+#		"tu_direct;merge_requests/38960;"
+#		"vk_barrier;merge_requests/38956;"
+#		"wsi_immediate;merge_requests/40584;"
+#		"wsi_fix;merge_requests/41188;"
         #'disable_VK_KHR_workgroup_memory_explicit_layout;../../patches/disable_KHR_workgroup_memory_explicit_layout.patch;'
-)
-experimental_patches=(
-		"tu_ubwc;merge_requests/39491;"
+#)
+#experimental_patches=(
+#		"tu_ubwc;merge_requests/39491;"
         #"copy_raw;merge_requests/35610;"
         #"force_sysmem_no_autotuner;../../patches/force_sysmem_no_autotuner.patch;"
-)
-failed_patches=()
-commit=""
-commit_short=""
-mesa_version=""
-vulkan_version=""
-clear
+#)
+#failed_patches=()
+#commit=""
+#commit_short=""
+#mesa_version=""
+#vulkan_version=""
+#clear
 
 # there are 4 functions here, simply comment to disable.
 # you can insert your own function and make a pull request.
@@ -96,8 +96,8 @@ prepare_workdir(){
 	fi
 
 	if [ -z "$1" ]; then
-		if [ -d mesa ]; then
-			echo "Removing old mesa ..." $'\n'
+		if [ -d mesa-for-android-container ]; then
+			echo "Removing old mesa-for-android-container ..." $'\n'
 			rm -rf mesa-for-android-container
 		fi
 		
