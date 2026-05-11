@@ -9,8 +9,19 @@ packagedir="$workdir/turnip_module"
 ndkver="android-ndk-r29"
 sdkver="36"
 cver="35"
-mesasrc="https://github.com/whitebelyash/mesa-unified/tree/turnip/gen8"
+mesasrc="https://github.com/whitebelyash/mesa-unified"
+srcfolder="mesa"
 driver="vulkan.turnip.so"
+
+#There are 4 functions here, simply comment to disable.
+#You can insert your own function and make a pull request.
+run_all(){
+	echo "====== Begin building TU V$BUILD_VERSION! ======"
+	check_deps
+	prepare_workdir
+	# This has path slash in the branch name and thus needs some workarounds
+	build_lib_for_android turnip/gen8 turnip-gen8 
+	#build_lib_for_android gen8-yuck
 
 #array of string => commit/branch;patch args
 #base_patches=(
