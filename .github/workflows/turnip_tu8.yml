@@ -1,4 +1,4 @@
-name: Build "turnip_tu8"
+name: Build "turnip_DiskDVD"
 
 on:
   workflow_dispatch:
@@ -18,7 +18,7 @@ jobs:
         sudo apt build-dep mesa -y
     
     - name: Execute build script
-      run: bash ./turnip_tu8.sh
+      run: bash ./turnip_DiskDVD.sh
 
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v6
