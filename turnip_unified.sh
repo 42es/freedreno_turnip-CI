@@ -9,8 +9,14 @@ packagedir="$workdir/turnip_module"
 ndkver="android-ndk-r29"
 sdkver="36"
 cver="35"
-mesasrc="https://github.com/whitebelyash/mesa-unified/tree/turnip/gen8"
+mesasrc="https://github.com/whitebelyash/mesa-unified"
 driver="vulkan.turnip.so"
+
+run_all(){
+    check_deps
+    prepare_workdir
+    build_lib_for_android turnip/gen8 turnip-gen8
+}
 
 #array of string => commit/branch;patch args
 #base_patches=(
@@ -96,14 +102,14 @@ prepare_workdir(){
 	fi
 
 	if [ -z "$1" ]; then
-		if [ -d mesa-unified/tree/turnip/gen8 ]; then
-			echo "Removing old mesa-unified/tree/turnip/gen8 ..." $'\n'
-			rm -rf mesa-unified/tree/turnip/gen8
+		if [ -d mesa-unified ]; then
+			echo "Removing old mesa-unified ..." $'\n'
+			rm -rf mesa-unified
 		fi
 		
-		echo "Cloning mesa-unified/tree/turnip/gen8 ..." $'\n'
-		git clone --depth=100 "$mesasrc" "$workdir/mesa-unified/tree/turnip/gen8"
-		cd mesa-unified/tree/turnip/gen8
+		echo "Cloning mesa-unified ..." $'\n'
+		git clone --depth=100 "$mesasrc" "$workdir/mesa-unified"
+		cd mesa-unified
 		commit_short=$(git rev-parse --short HEAD)
 		commit=$(git rev-parse HEAD)
 		mesa_version=$(cat VERSION | xargs)
@@ -140,7 +146,7 @@ apply_patches() {
 			fi
 		else 
 			patch_file="${patch_source#*\/}"
-			curl --output "../$patch_file".patch -k --retry-delay 30 --retry 5 -f --retry-all-errors https://github.com/whitebelyash/mesa-unified/tree/turnip/gen8/src/mesa/-/"$patch_source".patch
+			curl --output "../$patch_file".patch -k --retry-delay 30 --retry 5 -f --retry-all-errors https://github.com/whitebelyash/mesa-unified/src/mesa/-/"$patch_source".patch
 			sleep 1
 
 			if git apply $patch_args "../$patch_file".patch ; then
@@ -196,7 +202,7 @@ endian = 'little'
 EOF
 
 	echo "Generating build files ..." $'\n'
-	meson setup build-android-aarch64 --cross-file "$workdir"/mesa-unified/tree/turnip/gen8/android-aarch64 \
+	meson setup build-android-aarch64 --cross-file "$workdir"/mesa-unified/android-aarch64 \
  		-Dbuildtype=release \
    		-Dplatforms=android \
      	-Dplatform-sdk-version=$sdkver \
@@ -213,7 +219,7 @@ EOF
 }
 
 port_lib_for_adrenotool(){
-	cp "$workdir"/mesa-unified/tree/turnip/gen8/build-android-aarch64/src/freedreno/vulkan/libvulkan_freedreno.so "$workdir"/"$driver"
+	cp "$workdir"/mesa-unified/build-android-aarch64/src/freedreno/vulkan/libvulkan_freedreno.so "$workdir"/"$driver"
 	cd "$workdir"
 
 	#if ! [ -a "$driver" ]; then
@@ -256,7 +262,7 @@ EOF
 		echo "Turnip - $mesa_version - vk$vulkan_version - $date" > release
 		echo "$mesa_version"_"$commit_short" > tag
 		echo  $filename > filename
-		echo "### Base commit : [$commit_short](https://github.com/whitebelyash/mesa-unified/tree/turnip/gen8/src//mesa/-/commit/$commit_short)" > description
+		echo "### Base commit : [$commit_short](https://github.com/whitebelyash/mesa-unified/src//mesa/-/commit/$commit_short)" > description
 		echo "false" > patched
 		echo "false" > experimental
 	else		
