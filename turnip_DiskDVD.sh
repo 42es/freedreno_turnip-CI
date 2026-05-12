@@ -98,7 +98,7 @@ prepare_workdir(){
 	if [ -z "$1" ]; then
 		if [ -d A8XX-Y ]; then
 			echo "Removing old A8XX-Y ..." $'\n'
-			rm -rf mesa-unified
+			rm -rf A8XX-Y
 		fi
 		
 		echo "Cloning A8XX-Y ..." $'\n'
@@ -196,7 +196,7 @@ endian = 'little'
 EOF
 
 	echo "Generating build files ..." $'\n'
-	meson setup build-android-aarch64 --cross-file "$workdir"/mesa-unified/android-aarch64 \
+	meson setup build-android-aarch64 --cross-file "$workdir"/A8XX-Y/android-aarch64 \
  		-Dbuildtype=release \
    		-Dplatforms=android \
      	-Dplatform-sdk-version=$sdkver \
