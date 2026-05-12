@@ -233,8 +233,8 @@ port_lib_for_adrenotool(){
 {
   "schemaVersion": 1,
   "name": "Turnip - $mesa_version - $date - $commit_short$suffix - Android",
-  "description": "Compiled from Mesa, Commit $commit_short$suffix",
-  "author": "mesa",
+  "description": "Compiled from Mesa(https://github.com/lfdevs/mesa-for-android-container), Commit $commit_short$suffix",
+  "author": "lfdevs",
   "packageVersion": "1",
   "vendor": "Mesa",
   "driverVersion": "$mesa_version/vk$vulkan_version",
