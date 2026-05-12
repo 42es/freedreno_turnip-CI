@@ -103,7 +103,7 @@ prepare_workdir(){
 		
 		echo "Cloning mesa-unified ..." $'\n'
 		git clone --depth=100 "$mesasrc" "$workdir/mesa-unified"
-		cd mesa-for-android-container
+		cd mesa-unified
 		commit_short=$(git rev-parse --short HEAD)
 		commit=$(git rev-parse HEAD)
 		mesa_version=$(cat VERSION | xargs)
@@ -113,7 +113,7 @@ prepare_workdir(){
 		patch=$(awk -F'VK_HEADER_VERSION |\n#define' '{print $2}' <<< $(cat include/vulkan/vulkan_core.h) | xargs)
 		vulkan_version="$major.$minor.$patch"
 	else		
-		cd mesa-for-android-container
+		cd mesa-unified
 
 		if [ $1 == "patched" ]; then 
 			apply_patches ${base_patches[@]}
