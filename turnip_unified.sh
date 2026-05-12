@@ -239,8 +239,8 @@ port_lib_for_adrenotool(){
 {
   "schemaVersion": 1,
   "name": "Turnip - $mesa_version - $date - $commit_short$suffix - Gen8",
-  "description": "Compiled from Mesa, Commit $commit_short$suffix",
-  "author": "mesa",
+  "description": "Compiled from Mesa(https://github.com/whitebelyash/mesa-unified), Commit $commit_short$suffix",
+  "author": "whitebelyash",
   "packageVersion": "1",
   "vendor": "Mesa",
   "driverVersion": "$mesa_version/vk$vulkan_version",
