@@ -96,14 +96,14 @@ prepare_workdir(){
 	fi
 
 	if [ -z "$1" ]; then
-		if [ -d mesa-unified ]; then
-			echo "Removing old mesa-unified ..." $'\n'
-			rm -rf mesa-unified
+		if [ -d mesa-unified/tree/turnip/gen8 ]; then
+			echo "Removing old mesa-unified/tree/turnip/gen8 ..." $'\n'
+			rm -rf mesa-unified/tree/turnip/gen8
 		fi
 		
-		echo "Cloning mesa-unified ..." $'\n'
-		git clone --depth=100 "$mesasrc" "$workdir/mesa-unified"
-		cd mesa-unified
+		echo "Cloning mesa-unified/tree/turnip/gen8 ..." $'\n'
+		git clone --depth=100 "$mesasrc" "$workdir/mesa-unified/tree/turnip/gen8"
+		cd mesa-unified/tree/turnip/gen8
 		commit_short=$(git rev-parse --short HEAD)
 		commit=$(git rev-parse HEAD)
 		mesa_version=$(cat VERSION | xargs)
@@ -113,7 +113,7 @@ prepare_workdir(){
 		patch=$(awk -F'VK_HEADER_VERSION |\n#define' '{print $2}' <<< $(cat include/vulkan/vulkan_core.h) | xargs)
 		vulkan_version="$major.$minor.$patch"
 	else		
-		cd mesa-unified
+		cd mesa-unified/tree/turnip/gen8
 
 		if [ $1 == "patched" ]; then 
 			apply_patches ${base_patches[@]}
@@ -196,7 +196,7 @@ endian = 'little'
 EOF
 
 	echo "Generating build files ..." $'\n'
-	meson setup build-android-aarch64 --cross-file "$workdir"/mesa-unified/android-aarch64 \
+	meson setup build-android-aarch64 --cross-file "$workdir"/mesa-unified/tree/turnip/gen8/android-aarch64 \
  		-Dbuildtype=release \
    		-Dplatforms=android \
      	-Dplatform-sdk-version=$sdkver \
@@ -213,7 +213,7 @@ EOF
 }
 
 port_lib_for_adrenotool(){
-	cp "$workdir"/mesa-unified/build-android-aarch64/src/freedreno/vulkan/libvulkan_freedreno.so "$workdir"/"$driver"
+	cp "$workdir"/mesa-unified/tree/turnip/gen8/build-android-aarch64/src/freedreno/vulkan/libvulkan_freedreno.so "$workdir"/"$driver"
 	cd "$workdir"
 
 	#if ! [ -a "$driver" ]; then
