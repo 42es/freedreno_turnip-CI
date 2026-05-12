@@ -9,7 +9,7 @@ packagedir="$workdir/turnip_module"
 ndkver="android-ndk-r29"
 sdkver="36"
 cver="35"
-mesasrc="https://github.com/whitebelyash/mesa-unified"
+mesasrc="https://github.com/DiskDVD/A8XX-Y"
 driver="vulkan.turnip.so"
 
 #array of string => commit/branch;patch args
@@ -96,14 +96,14 @@ prepare_workdir(){
 	fi
 
 	if [ -z "$1" ]; then
-		if [ -d mesa-unified ]; then
-			echo "Removing old mesa-unified ..." $'\n'
+		if [ -d A8XX-Y ]; then
+			echo "Removing old A8XX-Y ..." $'\n'
 			rm -rf mesa-unified
 		fi
 		
-		echo "Cloning mesa-unified ..." $'\n'
-		git clone --depth=100 "$mesasrc" "$workdir/mesa-unified"
-		cd mesa-unified
+		echo "Cloning A8XX-Y ..." $'\n'
+		git clone --depth=100 "$mesasrc" "$workdir/A8XX-Y"
+		cd A8XX-Y
 		commit_short=$(git rev-parse --short HEAD)
 		commit=$(git rev-parse HEAD)
 		mesa_version=$(cat VERSION | xargs)
@@ -113,7 +113,7 @@ prepare_workdir(){
 		patch=$(awk -F'VK_HEADER_VERSION |\n#define' '{print $2}' <<< $(cat include/vulkan/vulkan_core.h) | xargs)
 		vulkan_version="$major.$minor.$patch"
 	else		
-		cd mesa-unified
+		cd A8XX-Y
 
 		if [ $1 == "patched" ]; then 
 			apply_patches ${base_patches[@]}
@@ -140,7 +140,7 @@ apply_patches() {
 			fi
 		else 
 			patch_file="${patch_source#*\/}"
-			curl --output "../$patch_file".patch -k --retry-delay 30 --retry 5 -f --retry-all-errors https://github.com/whitebelyash/mesa-unified/src/mesa/-/"$patch_source".patch
+			curl --output "../$patch_file".patch -k --retry-delay 30 --retry 5 -f --retry-all-errors https://github.com/DiskDVD/A8XX-Y/src/mesa/-/"$patch_source".patch
 			sleep 1
 
 			if git apply $patch_args "../$patch_file".patch ; then
@@ -163,7 +163,7 @@ patch_to_description() {
 		if [[ $patch_source == *"../.."* ]]; then
 			echo "- $patch_name, $patch_source, $patch_args" >> description
 		else 
-			echo "- $patch_name, [$patch_source](https://github.com/whitebelyash/mesa-unified/src/mesa/-/$patch_source), $patch_args" >> description
+			echo "- $patch_name, [$patch_source](https://github.com/DiskDVD/A8XX-Y/src/mesa/-/$patch_source), $patch_args" >> description
 		fi
 	done
 }
@@ -213,7 +213,7 @@ EOF
 }
 
 port_lib_for_adrenotool(){
-	cp "$workdir"/mesa-unified/build-android-aarch64/src/freedreno/vulkan/libvulkan_freedreno.so "$workdir"/"$driver"
+	cp "$workdir"/A8XX-Y/build-android-aarch64/src/freedreno/vulkan/libvulkan_freedreno.so "$workdir"/"$driver"
 	cd "$workdir"
 
 	#if ! [ -a "$driver" ]; then
@@ -256,7 +256,7 @@ EOF
 		echo "Turnip - $mesa_version - vk$vulkan_version - $date" > release
 		echo "$mesa_version"_"$commit_short" > tag
 		echo  $filename > filename
-		echo "### Base commit : [$commit_short](https://github.com/whitebelyash/mesa-unified/src//mesa/-/commit/$commit_short)" > description
+		echo "### Base commit : [$commit_short](https://github.com/DiskDVD/A8XX-Y/src/mesa/-/commit/$commit_short)" > description
 		echo "false" > patched
 		echo "false" > experimental
 	else		
