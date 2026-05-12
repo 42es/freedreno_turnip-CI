@@ -1,4 +1,4 @@
-name: Build "turnip_unified.sh"
+name: Build "turnip_unified"
 
 on:
   workflow_dispatch:
