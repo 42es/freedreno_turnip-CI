@@ -2,8 +2,8 @@ name: Build "turnip_Android"
 
 on:
   workflow_dispatch:
-#  schedule:
-# - cron: "30 1 25 * *"
+  schedule:
+   - cron: "30 1 25 * *"
 
 jobs:
   start_building_turnip:
@@ -18,7 +18,7 @@ jobs:
         sudo apt build-dep mesa -y
     
     - name: Execute build script
-      run: bash ./turnip_gen8.sh
+      run: bash ./mesa-switch.sh
 
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v6
