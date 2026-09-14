@@ -10,7 +10,7 @@ ndkver="android-ndk-r29"
 sdkver="36"
 cver="35"
 mesasrc="https://github.com/danfromtico/mesa-switch"
-driver="vulkan.turnip.so"
+driver="libvulkan.so"
 
 #array of string => commit/branch;patch args
 #base_patches=(
@@ -213,7 +213,7 @@ EOF
 }
 
 port_lib_for_adrenotool(){
-	cp "$workdir"/mesa-switch/build-android-aarch64/src/freedreno/vulkan/libvulkan_freedreno.so "$workdir"/"$driver"
+	cp "$workdir"/mesa-switch/build-android-aarch64/src/freedreno/vulkan/libvulkan.so "$workdir"/"$driver"
 	cd "$workdir"
 
 	#if ! [ -a "$driver" ]; then
