@@ -250,4 +250,4 @@ EOF
 
 	if [ -z "$1" ]; then
 		echo "Turnip - $mesa_version - $date" > release
-		echo "$mesa_ver
+		echo "$mesa_ver"
