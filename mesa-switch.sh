@@ -250,4 +250,89 @@ EOF
 
 	if [ -z "$1" ]; then
 		echo "Turnip - $mesa_version - $date" > release
-		echo "$mesa_ver"
+		echo "$mesa_version"_"$commit_short" > tag
+		echo  $filename > filename
+		echo "### Base commit : [$commit_short](https://gitlab.freedesktop.org/mesa/mesa/-/commit/$commit_short)" > description
+		echo "false" > patched
+		echo "false" > experimental
+	else		
+		if [ $1 == "patched" ]; then 
+			echo "## Upstreams / Patches" >> description
+			echo "These have not been merged by Mesa officially yet and may introduce bugs or" >> description
+			echo "we revert stuff that breaks games but still got merged in (see --reverse)" >> description
+			patch_to_description ${base_patches[@]}
+			echo "true" > patched
+			echo "" >> description
+			echo "_Upstreams / Patches are only applied to the patched version (\_patched.zip)_" >> description
+			echo "_If a patch is not present anymore, it's most likely because it got merged, is not needed anymore or was breaking something._" >> description
+		else 
+			echo "### Upstreams / Patches (Experimental)" >> description
+			echo "Include previously listed patches + experimental ones" >> description
+			patch_to_description ${experimental_patches[@]}
+			echo "true" > experimental
+			echo "" >> description
+			echo "_Experimental patches are only applied to the experimental version (\_experimental.zip)_" >> description
+		fi
+	fi
+
+	if (( ${#failed_patches[@]} )); then
+		echo "" >> description
+		echo "#### Patches that failed to apply" >> description
+		patch_to_description ${failed_patches[@]}
+	fi
+	
+	if ! [ -a "$workdir"/"$filename".zip ];
+		then echo -e "$red-Packing failed!$nocolor" && exit 1
+		else echo -e "$green-All done, you can take your zip from this folder;$nocolor" && echo "$workdir"/
+	fi
+}
+
+run_all	filename=turnip_"$(date +'%b-%d-%Y')"_"$commit_short"
+	echo "Copy necessary files from work directory ..." $'\n'
+	cp "$workdir"/"$driver" "$packagedir"
+
+	echo "Packing files in to adrenotool package ..." $'\n'
+	zip -9 "$workdir"/"$filename$suffix".zip ./*
+
+	cd "$workdir"
+
+	if [ -z "$1" ]; then
+		echo "Turnip - $mesa_version - $date" > release
+		echo "$mesa_version"_"$commit_short" > tag
+		echo  $filename > filename
+		echo "### Base commit : [$commit_short](https://gitlab.freedesktop.org/mesa/mesa/-/commit/$commit_short)" > description
+		echo "false" > patched
+		echo "false" > experimental
+	else		
+		if [ $1 == "patched" ]; then 
+			echo "## Upstreams / Patches" >> description
+			echo "These have not been merged by Mesa officially yet and may introduce bugs or" >> description
+			echo "we revert stuff that breaks games but still got merged in (see --reverse)" >> description
+			patch_to_description ${base_patches[@]}
+			echo "true" > patched
+			echo "" >> description
+			echo "_Upstreams / Patches are only applied to the patched version (\_patched.zip)_" >> description
+			echo "_If a patch is not present anymore, it's most likely because it got merged, is not needed anymore or was breaking something._" >> description
+		else 
+			echo "### Upstreams / Patches (Experimental)" >> description
+			echo "Include previously listed patches + experimental ones" >> description
+			patch_to_description ${experimental_patches[@]}
+			echo "true" > experimental
+			echo "" >> description
+			echo "_Experimental patches are only applied to the experimental version (\_experimental.zip)_" >> description
+		fi
+	fi
+
+	if (( ${#failed_patches[@]} )); then
+		echo "" >> description
+		echo "#### Patches that failed to apply" >> description
+		patch_to_description ${failed_patches[@]}
+	fi
+	
+	if ! [ -a "$workdir"/"$filename".zip ];
+		then echo -e "$red-Packing failed!$nocolor" && exit 1
+		else echo -e "$green-All done, you can take your zip from this folder;$nocolor" && echo "$workdir"/
+	fi
+}
+
+run_all
